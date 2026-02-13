@@ -50,7 +50,7 @@ const DonateModal: React.FC<DonateModalProps> = ({ isOpen, onClose }) => {
                     <h2 className="text-xl font-bold text-gray-800 mb-1">感谢您的支持</h2>
                     <p className="text-gray-500 mb-4 text-sm">您的慷慨是项目前进的动力</p>
                     <img 
-                        src="https://img2.nloln.de/file/BQACAgUAAyEGAASLVN5eAAICk2mN45AwGUskAt-IElNLMd01oxSKAAKkHAACodFxVE4r2ioOGqDxOgQ.jpg"
+                        src="https://s41.ax1x.com/2026/02/13/pZqMwFA.jpg"
                         alt="Payment QR Codes for WeChat and Alipay"
                         className="w-full h-auto rounded-lg shadow-md"
                     />
