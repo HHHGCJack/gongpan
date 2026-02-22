@@ -1,82 +1,41 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G胖儿的站 | GongPan</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Long+Cang&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>G胖儿GongPan</title>
     <style>
-        :root { 
-            --apple-bg: #f5f5f7; 
-            --apple-text: #1d1d1f;
-        }
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            background: var(--apple-bg); 
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-            color: var(--apple-text);
-            overflow-x: hidden; 
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+      /* Smooth scrolling */
+      html { scroll-behavior: smooth; }
+      
+      /* Globally hide scrollbars */
+      html, body {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        overflow-x: hidden; /* Prevent horizontal scroll */
+        -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+      }
+      
+      html::-webkit-scrollbar, body::-webkit-scrollbar {
+        display: none; /* Chrome, Safari and Opera */
+      }
 
-        /* --- Liquid Glass Effect (Apple Style) --- */
-        .glass-nav {
-            background: rgba(245, 245, 247, 0.7);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-            transition: all 0.3s ease;
-        }
-        
-        /* --- Hero Text Animation --- */
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(15px) scale(0.98); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes fadeOut {
-          from { opacity: 1; transform: translateY(0) scale(1); }
-          to { opacity: 0; transform: translateY(-15px) scale(0.98); }
-        }
-        .fade-in-out {
-          animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), fadeOut 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 2.4s;
-        }
-        
-        /* --- Product Card Hover Effect --- */
-        .product-card {
-            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-            will-change: transform, box-shadow;
-        }
-        .product-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 30px 60px -12px rgba(0,0,0,0.15);
-        }
-        .card-image {
-            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .product-card:hover .card-image {
-            transform: scale(1.08);
-        }
-
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #f5f5f7;
+        color: #1d1d1f;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      /* Cursive fallbacks using local fonts if possible, or standard serif/cursive */
+      .font-cursive-en { font-family: "Snell Roundhand", "Apple Chancery", cursive; }
+      .font-cursive-cn { font-family: "KaiTi", "STKaiti", serif; }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "react/": "https://esm.sh/react@^19.2.4/"
-  }
-}
-</script>
 <link rel="stylesheet" href="/index.css">
 </head>
-<body>
+  <body>
     <div id="root"></div>
-<script type="module" src="/index.tsx"></script>
+  <script type="module" src="/index.tsx"></script>
 </body>
 </html>
