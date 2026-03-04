@@ -15,7 +15,8 @@ export interface NavChild {
 export interface ProductCardProps {
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string;
+  gradient?: string;
   href: string;
   tag?: string;
   theme?: 'light' | 'dark';
@@ -24,10 +25,11 @@ export interface ProductCardProps {
   onToast?: () => void;
 }
 
-export type VisualEffect = 'liquid' | 'blur';
+export type VisualEffect = 'liquid' | 'blur' | 'cyberpunk';
 
 export interface ThemeContextType {
   visualEffect: VisualEffect;
   setVisualEffect: (effect: VisualEffect) => void;
   showToast: (message: string) => void;
+  handleCardToast: () => void;
 }
