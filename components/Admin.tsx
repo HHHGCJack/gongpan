@@ -1,18 +1,221 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../App';
-import { Upload, FileText, Image as ImageIcon, Loader2, Lock } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, Loader2, Lock, Edit2, Save, Trash2, Book, Equal } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+interface AdminBook {
+  id: string;
+  title: string;
+  description: string;
+  coverUrl: string;
+  pdfUrl: string;
+  created_at: string;
+  order_index?: number;
+}
+
+interface SortableBookItemProps {
+  book: AdminBook;
+  visualEffect: string;
+  editingId: string | null;
+  editTitle: string;
+  editDescription: string;
+  setEditTitle: (val: string) => void;
+  setEditDescription: (val: string) => void;
+  saveEditing: (id: string) => void;
+  setEditingId: (id: string | null) => void;
+  startEditing: (book: AdminBook) => void;
+  deleteBook: (id: string) => void;
+  getInputClasses: () => string;
+}
+
+const SortableBookItem = ({
+  book, visualEffect, editingId, editTitle, editDescription,
+  setEditTitle, setEditDescription, saveEditing, setEditingId,
+  startEditing, deleteBook, getInputClasses
+}: SortableBookItemProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: book.id });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 1,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={`p-4 rounded-xl border flex flex-col md:flex-row gap-4 items-start md:items-center relative pr-12 ${
+      visualEffect === 'cyberpunk' ? 'bg-black/40 border-cyan-900/50' : 'bg-white/40 border-gray-200'
+    } ${isDragging ? 'shadow-2xl ring-2 ring-blue-500' : ''}`}>
+      
+      {/* Drag Handle */}
+      <div {...attributes} {...listeners} className="absolute top-2 right-2 cursor-grab active:cursor-grabbing p-2 text-gray-400 hover:text-gray-600 touch-none">
+        <Equal className="w-6 h-6" />
+      </div>
+
+      {/* Cover Thumbnail */}
+      <div className="w-20 h-28 shrink-0 rounded-md overflow-hidden bg-gray-200">
+        <img src={book.coverUrl} alt={book.title} className="w-full h-full object-cover" />
+      </div>
+      
+      {/* Content */}
+      <div className="flex-grow w-full">
+        {editingId === book.id ? (
+          <div className="space-y-3">
+            <input 
+              type="text" 
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className={getInputClasses()}
+              placeholder="书名"
+            />
+            <textarea 
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              className={`${getInputClasses()} min-h-[80px] text-sm`}
+              placeholder="简介"
+            />
+            <div className="flex space-x-2">
+              <button 
+                onClick={() => saveEditing(book.id)}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 flex items-center"
+              >
+                <Save className="w-4 h-4 mr-1" /> 保存
+              </button>
+              <button 
+                onClick={() => setEditingId(null)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-gray-600"
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <h3 className={`font-bold text-lg mb-1 ${visualEffect === 'cyberpunk' ? 'text-cyan-300' : 'text-gray-900'}`}>{book.title}</h3>
+            <p className={`text-sm line-clamp-2 mb-3 ${visualEffect === 'cyberpunk' ? 'text-cyan-600' : 'text-gray-600'}`}>{book.description || '暂无简介'}</p>
+            
+            <div className="flex flex-wrap gap-2">
+              <button 
+                onClick={() => startEditing(book)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center transition-colors ${
+                  visualEffect === 'cyberpunk' ? 'bg-cyan-900/30 text-cyan-400 hover:bg-cyan-800/50' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                }`}
+              >
+                <Edit2 className="w-4 h-4 mr-1" /> 编辑
+              </button>
+              <button 
+                onClick={() => deleteBook(book.id)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center transition-colors ${
+                  visualEffect === 'cyberpunk' ? 'bg-red-900/30 text-red-400 hover:bg-red-800/50' : 'bg-red-50 text-red-600 hover:bg-red-100'
+                }`}
+              >
+                <Trash2 className="w-4 h-4 mr-1" /> 删除
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const Admin: React.FC = () => {
   const { visualEffect } = useTheme();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [activeTab, setActiveTab] = useState<'manage' | 'upload'>('manage');
+  
+  // Upload State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [cover, setCover] = useState<File | null>(null);
   const [pdf, setPdf] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState('');
+
+  // Manage State
+  const [books, setBooks] = useState<AdminBook[]>([]);
+  const [isLoadingBooks, setIsLoadingBooks] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [hasOrderChanged, setHasOrderChanged] = useState(false);
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'manage') {
+      fetchBooks();
+    }
+  }, [isAuthenticated, activeTab]);
+
+  const fetchBooks = async () => {
+    setIsLoadingBooks(true);
+    
+    let { data, error } = await supabase
+      .from('books')
+      .select('*')
+      .order('order_index', { ascending: true })
+      .order('created_at', { ascending: false });
+      
+    if (error && error.message.includes('order_index')) {
+      const fallback = await supabase
+        .from('books')
+        .select('*')
+        .order('created_at', { ascending: false });
+      data = fallback.data;
+      error = fallback.error;
+    }
+      
+    if (error) {
+      setMessage(`加载图书失败: ${error.message}`);
+    } else if (data) {
+      setBooks(data);
+      setHasOrderChanged(false);
+    }
+    setIsLoadingBooks(false);
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,16 +270,31 @@ export const Admin: React.FC = () => {
         .getPublicUrl(pdfName);
 
       // 3. Insert into Database
-      const { error: dbError } = await supabase
+      let { error: dbError } = await supabase
         .from('books')
         .insert([
           { 
             title, 
             description, 
             coverUrl: coverUrlData.publicUrl, 
-            pdfUrl: pdfUrlData.publicUrl 
+            pdfUrl: pdfUrlData.publicUrl,
+            order_index: 0
           }
         ]);
+
+      if (dbError && dbError.message.includes('order_index')) {
+        const fallback = await supabase
+          .from('books')
+          .insert([
+            { 
+              title, 
+              description, 
+              coverUrl: coverUrlData.publicUrl, 
+              pdfUrl: pdfUrlData.publicUrl 
+            }
+          ]);
+        dbError = fallback.error;
+      }
 
       if (dbError) throw new Error(`数据库保存失败: ${dbError.message}`);
 
@@ -86,14 +304,115 @@ export const Admin: React.FC = () => {
       setCover(null);
       setPdf(null);
       // Reset file inputs
-      (document.getElementById('cover-upload') as HTMLInputElement).value = '';
-      (document.getElementById('pdf-upload') as HTMLInputElement).value = '';
+      const coverInput = document.getElementById('cover-upload') as HTMLInputElement;
+      if (coverInput) coverInput.value = '';
+      const pdfInput = document.getElementById('pdf-upload') as HTMLInputElement;
+      if (pdfInput) pdfInput.value = '';
       
     } catch (err: any) {
       console.error(err);
       setMessage(err.message || '网络错误，上传失败。');
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const startEditing = (book: AdminBook) => {
+    setEditingId(book.id);
+    setEditTitle(book.title);
+    setEditDescription(book.description || '');
+  };
+
+  const saveEditing = async (id: string) => {
+    const { data, error } = await supabase
+      .from('books')
+      .update({ title: editTitle, description: editDescription })
+      .eq('id', id)
+      .select();
+    
+    if (error) {
+      setMessage(`更新失败: ${error.message}`);
+    } else if (!data || data.length === 0) {
+      setMessage('更新失败: 数据库 RLS 策略可能阻止了此操作。');
+    } else {
+      setMessage('更新成功！');
+      setEditingId(null);
+      fetchBooks();
+    }
+  };
+
+  const deleteBook = async (id: string) => {
+    if (!window.confirm('确定要删除这本书吗？')) return;
+    
+    const { data, error } = await supabase
+      .from('books')
+      .delete()
+      .eq('id', id)
+      .select();
+      
+    if (error) {
+      setMessage(`删除失败: ${error.message}`);
+    } else if (!data || data.length === 0) {
+      setMessage('删除失败: 数据库 RLS 策略可能阻止了此操作。');
+    } else {
+      setMessage('删除成功！');
+      fetchBooks();
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = books.findIndex((book) => book.id === active.id);
+      const newIndex = books.findIndex((book) => book.id === over.id);
+
+      const newBooks = arrayMove(books, oldIndex, newIndex);
+      setBooks(newBooks);
+      setHasOrderChanged(true);
+    }
+  };
+
+  const saveOrder = async () => {
+    setIsSavingOrder(true);
+    setMessage('');
+
+    try {
+      // Use a standard for loop to update sequentially and avoid potential Promise.all/PostgREST bulk issues
+      let failedCount = 0;
+      
+      for (let i = 0; i < books.length; i++) {
+        const book = books[i];
+        const { error } = await supabase
+          .from('books')
+          .update({ order_index: i })
+          .eq('id', book.id);
+
+        if (error) {
+          console.error(`Error updating book ${book.id}:`, error);
+          throw error;
+        }
+      }
+
+      // We do a quick verify fetch to ensure RLS didn't silently block the updates
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('books')
+        .select('id, order_index')
+        .eq('id', books[0]?.id || '')
+        .single();
+        
+      if (!verifyError && verifyData && verifyData.order_index !== 0 && books.length > 0) {
+         throw new Error("更新未能生效。这通常是因为数据库的 RLS (行级安全) 策略阻止了更新操作。请检查您的 Supabase RLS 设置。");
+      }
+
+      setMessage('排序保存成功！');
+      setHasOrderChanged(false);
+    } catch (error: any) {
+      console.error("Save order error:", error);
+      setMessage(`保存排序失败: ${error.message || '未知错误'} (请确保数据库中已添加 order_index 字段，且类型为数字)`);
+      fetchBooks(); // Revert on error
+    } finally {
+      setIsSavingOrder(false);
     }
   };
 
@@ -115,9 +434,9 @@ export const Admin: React.FC = () => {
   };
 
   return (
-    <main className="flex-grow pt-24 pb-32 px-6 max-w-3xl mx-auto w-full relative z-10">
+    <main className="flex-grow pt-24 pb-32 px-6 max-w-4xl mx-auto w-full relative z-10">
       <div className={`rounded-[2.5rem] p-8 md:p-12 ${getGlassClasses()}`}>
-        <h1 className={`text-3xl font-bold mb-8 text-center ${visualEffect === 'cyberpunk' ? 'text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]' : 'text-gray-900'}`}>后台管理 - 上传图书</h1>
+        <h1 className={`text-3xl font-bold mb-8 text-center ${visualEffect === 'cyberpunk' ? 'text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]' : 'text-gray-900'}`}>后台管理</h1>
         
         {message && (
           <div className={`mb-6 p-4 rounded-xl text-center font-medium ${message.includes('成功') ? 'bg-green-500/20 text-green-600 border border-green-500/30' : 'bg-red-500/20 text-red-600 border border-red-500/30'}`}>
@@ -153,93 +472,190 @@ export const Admin: React.FC = () => {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className={`block text-sm font-semibold mb-2 ${visualEffect === 'cyberpunk' ? 'text-cyan-300' : 'text-gray-700'}`}>书名</label>
-            <input 
-              type="text" 
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className={getInputClasses()}
-              placeholder="例如：经济学人 2024-05"
-              required
-            />
-          </div>
-
-          <div>
-            <label className={`block text-sm font-semibold mb-2 ${visualEffect === 'cyberpunk' ? 'text-cyan-300' : 'text-gray-700'}`}>简介</label>
-            <textarea 
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className={`${getInputClasses()} min-h-[100px] resize-y`}
-              placeholder="简短描述..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className={`block text-sm font-semibold mb-2 ${visualEffect === 'cyberpunk' ? 'text-cyan-300' : 'text-gray-700'}`}>封面图片 (JPG/PNG)</label>
-              <div className={`relative flex items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-all ${visualEffect === 'cyberpunk' ? 'border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-900/20' : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50/50'}`}>
-                <input 
-                  id="cover-upload"
-                  type="file" 
-                  accept="image/*"
-                  onChange={(e) => setCover(e.target.files?.[0] || null)}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  required
-                />
-                <div className="text-center flex flex-col items-center">
-                  <ImageIcon className={`w-8 h-8 mb-2 ${visualEffect === 'cyberpunk' ? 'text-cyan-500/50' : 'text-gray-400'}`} />
-                  <span className={`text-sm font-medium ${visualEffect === 'cyberpunk' ? 'text-cyan-400/80' : 'text-gray-500'}`}>
-                    {cover ? cover.name : '点击或拖拽上传封面'}
-                  </span>
-                </div>
-              </div>
+          <>
+            {/* Tabs */}
+            <div className="flex space-x-4 mb-8 border-b border-gray-200/20 pb-4">
+              <button
+                onClick={() => { setActiveTab('manage'); setMessage(''); }}
+                className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                  activeTab === 'manage' 
+                    ? (visualEffect === 'cyberpunk' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' : 'bg-black text-white')
+                    : (visualEffect === 'cyberpunk' ? 'text-cyan-600 hover:text-cyan-400' : 'text-gray-500 hover:text-gray-900')
+                }`}
+              >
+                图书管理
+              </button>
+              <button
+                onClick={() => { setActiveTab('upload'); setMessage(''); }}
+                className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                  activeTab === 'upload' 
+                    ? (visualEffect === 'cyberpunk' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' : 'bg-black text-white')
+                    : (visualEffect === 'cyberpunk' ? 'text-cyan-600 hover:text-cyan-400' : 'text-gray-500 hover:text-gray-900')
+                }`}
+              >
+                图书上传
+              </button>
             </div>
 
-            <div>
-              <label className={`block text-sm font-semibold mb-2 ${visualEffect === 'cyberpunk' ? 'text-cyan-300' : 'text-gray-700'}`}>PDF 文件</label>
-              <div className={`relative flex items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-all ${visualEffect === 'cyberpunk' ? 'border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-900/20' : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50/50'}`}>
-                <input 
-                  id="pdf-upload"
-                  type="file" 
-                  accept="application/pdf"
-                  onChange={(e) => setPdf(e.target.files?.[0] || null)}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  required
-                />
-                <div className="text-center flex flex-col items-center">
-                  <FileText className={`w-8 h-8 mb-2 ${visualEffect === 'cyberpunk' ? 'text-cyan-500/50' : 'text-gray-400'}`} />
-                  <span className={`text-sm font-medium ${visualEffect === 'cyberpunk' ? 'text-cyan-400/80' : 'text-gray-500'}`}>
-                    {pdf ? pdf.name : '点击或拖拽上传 PDF'}
-                  </span>
+            {/* Tab Content: Manage */}
+            {activeTab === 'manage' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className={`text-xl font-bold ${visualEffect === 'cyberpunk' ? 'text-cyan-300' : 'text-gray-800'}`}>图书列表</h2>
+                  {hasOrderChanged && (
+                    <button
+                      onClick={saveOrder}
+                      disabled={isSavingOrder}
+                      className={`px-4 py-2 rounded-lg font-medium flex items-center transition-all ${
+                        visualEffect === 'cyberpunk'
+                          ? 'bg-cyan-500 text-black hover:bg-cyan-400 hover:shadow-[0_0_15px_rgba(34,211,238,0.6)] disabled:bg-cyan-900/50 disabled:text-cyan-500/50'
+                          : 'bg-black text-white hover:bg-gray-800 hover:shadow-md disabled:bg-gray-300 disabled:text-gray-500'
+                      }`}
+                    >
+                      {isSavingOrder ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> 保存中...</>
+                      ) : (
+                        <><Save className="w-4 h-4 mr-2" /> 保存排序</>
+                      )}
+                    </button>
+                  )}
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <button 
-            type="submit" 
-            disabled={isUploading}
-            className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center ${
-              visualEffect === 'cyberpunk' 
-                ? 'bg-cyan-500 text-black hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.6)] disabled:bg-cyan-900/50 disabled:text-cyan-500/50' 
-                : 'bg-black text-white hover:bg-gray-800 hover:shadow-lg disabled:bg-gray-300 disabled:text-gray-500'
-            }`}
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="w-6 h-6 mr-2 animate-spin" />
-                上传中...
-              </>
-            ) : (
-              <>
-                <Upload className="w-6 h-6 mr-2" />
-                确认上传
-              </>
+                {isLoadingBooks ? (
+                  <div className="flex justify-center items-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+                  </div>
+                ) : books.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Book className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>暂无图书，请先上传</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    <DndContext 
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext 
+                        items={books.map(b => b.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {books.map((book) => (
+                          <SortableBookItem 
+                            key={book.id}
+                            book={book}
+                            visualEffect={visualEffect}
+                            editingId={editingId}
+                            editTitle={editTitle}
+                            editDescription={editDescription}
+                            setEditTitle={setEditTitle}
+                            setEditDescription={setEditDescription}
+                            saveEditing={saveEditing}
+                            setEditingId={setEditingId}
+                            startEditing={startEditing}
+                            deleteBook={deleteBook}
+                            getInputClasses={getInputClasses}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
+                  </div>
+                )}
+              </div>
             )}
-          </button>
-        </form>
+
+            {/* Tab Content: Upload */}
+            {activeTab === 'upload' && (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className={`block text-sm font-semibold mb-2 ${visualEffect === 'cyberpunk' ? 'text-cyan-300' : 'text-gray-700'}`}>书名</label>
+                  <input 
+                    type="text" 
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className={getInputClasses()}
+                    placeholder="例如：经济学人 2024-05"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-semibold mb-2 ${visualEffect === 'cyberpunk' ? 'text-cyan-300' : 'text-gray-700'}`}>简介</label>
+                  <textarea 
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className={`${getInputClasses()} min-h-[100px] resize-y`}
+                    placeholder="简短描述..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className={`block text-sm font-semibold mb-2 ${visualEffect === 'cyberpunk' ? 'text-cyan-300' : 'text-gray-700'}`}>封面图片 (JPG/PNG)</label>
+                    <div className={`relative flex items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-all ${visualEffect === 'cyberpunk' ? 'border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-900/20' : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50/50'}`}>
+                      <input 
+                        id="cover-upload"
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => setCover(e.target.files?.[0] || null)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        required
+                      />
+                      <div className="text-center flex flex-col items-center">
+                        <ImageIcon className={`w-8 h-8 mb-2 ${visualEffect === 'cyberpunk' ? 'text-cyan-500/50' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-medium ${visualEffect === 'cyberpunk' ? 'text-cyan-400/80' : 'text-gray-500'}`}>
+                          {cover ? cover.name : '点击或拖拽上传封面'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-semibold mb-2 ${visualEffect === 'cyberpunk' ? 'text-cyan-300' : 'text-gray-700'}`}>PDF 文件</label>
+                    <div className={`relative flex items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-all ${visualEffect === 'cyberpunk' ? 'border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-900/20' : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50/50'}`}>
+                      <input 
+                        id="pdf-upload"
+                        type="file" 
+                        accept="application/pdf"
+                        onChange={(e) => setPdf(e.target.files?.[0] || null)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        required
+                      />
+                      <div className="text-center flex flex-col items-center">
+                        <FileText className={`w-8 h-8 mb-2 ${visualEffect === 'cyberpunk' ? 'text-cyan-500/50' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-medium ${visualEffect === 'cyberpunk' ? 'text-cyan-400/80' : 'text-gray-500'}`}>
+                          {pdf ? pdf.name : '点击或拖拽上传 PDF'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={isUploading}
+                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center ${
+                    visualEffect === 'cyberpunk' 
+                      ? 'bg-cyan-500 text-black hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.6)] disabled:bg-cyan-900/50 disabled:text-cyan-500/50' 
+                      : 'bg-black text-white hover:bg-gray-800 hover:shadow-lg disabled:bg-gray-300 disabled:text-gray-500'
+                  }`}
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                      上传中...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6 mr-2" />
+                      确认上传
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+          </>
         )}
       </div>
     </main>
