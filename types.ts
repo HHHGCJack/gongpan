@@ -25,11 +25,14 @@ export interface ProductCardProps {
   onToast?: () => void;
 }
 
-export type VisualEffect = 'liquid' | 'blur' | 'cyberpunk';
+export type ThemeMode = 'light' | 'dark';
+export type Language = 'zh' | 'en' | 'ja' | 'ko' | 'es' | 'fr' | 'de' | 'el';
 
 export interface ThemeContextType {
-  visualEffect: VisualEffect;
-  setVisualEffect: (effect: VisualEffect) => void;
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
+  language: Language;
+  setLanguage: (lang: Language) => void;
   showToast: (message: string) => void;
   handleCardToast: () => void;
   pansouEnabled: boolean;
