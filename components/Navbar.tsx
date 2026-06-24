@@ -280,32 +280,20 @@ export const Navbar: React.FC = () => {
   };
 
   // Liquid Glass Logic combined with Light/Dark Theme
-  const getGlassStyle = (type: 'nav' | 'dropdown' | 'mobile') => {
+  const getGlassStyle = (type: 'mobile') => {
     const gpuFix = 'transform-gpu backface-hidden';
     
     const isDark = themeMode === 'dark';
     const bgNav = isDark ? 'bg-black/20 bg-gradient-to-br from-black/40 via-black/10 to-black/20' : 'bg-white/10 bg-gradient-to-br from-white/40 via-white/5 to-white/20';
     const bgBlur = isDark ? 'backdrop-blur-[25px] backdrop-saturate-[150%] backdrop-contrast-[110%]' : 'backdrop-blur-[25px] backdrop-saturate-[200%] backdrop-contrast-[110%] backdrop-brightness-[110%]';
-    const shadow = isDark 
-      ? 'shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),_inset_0_-1px_2px_rgba(255,255,255,0.02)]' 
-      : 'shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),_inset_0_-1px_2px_rgba(255,255,255,0.2),_inset_1px_0_2px_rgba(255,255,255,0.3)]';
     
-    const liquidStyle = `${bgNav} ${bgBlur} ${shadow} ${gpuFix}`;
-
     const borderColor = isDark ? 'border-white/10' : 'border-white/30';
-
-    if (type === 'nav') {
-      if (isDropdownOpen) return `${liquidStyle} border-b border-transparent shadow-none`;
-      if (isScrolled) return `${liquidStyle} border-b ${borderColor} shadow-sm`;
-      return `border-b border-transparent`;
-    }
-    if (type === 'dropdown') {
-      // Deeper shadow for dropdown
-      const dShadow = isDark ? 'shadow-[0_50px_100px_rgba(0,0,0,0.5)]' : 'shadow-[0_50px_100px_rgba(0,0,0,0.2)]';
-      return `${liquidStyle} border-t ${borderColor} ${dShadow}`;
-    }
+    
     if (type === 'mobile') {
-      return `${liquidStyle} border-b ${borderColor}`;
+      const shadow = isDark 
+        ? 'shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),_inset_0_-1px_2px_rgba(255,255,255,0.02)]' 
+        : 'shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),_inset_0_-1px_2px_rgba(255,255,255,0.2),_inset_1px_0_2px_rgba(255,255,255,0.3)]';
+      return `${bgNav} ${bgBlur} ${shadow} ${gpuFix} border-b ${borderColor}`;
     }
     return '';
   };
@@ -313,14 +301,14 @@ export const Navbar: React.FC = () => {
   const getNavPillStyle = (isActive: boolean) => {
     const isDark = themeMode === 'dark';
     if (!isActive) {
-      return isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-black';
+      return isDark ? 'text-gray-300 hover:text-white border border-transparent' : 'text-gray-600 hover:text-black border border-transparent';
     }
     return isDark 
-      ? 'text-white bg-white/10 backdrop-blur-md border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_12px_rgba(0,0,0,0.4)]'
-      : 'text-black bg-white/20 backdrop-blur-md border border-white/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),0_4px_12px_rgba(0,0,0,0.08)]';
+      ? 'text-white bg-white/10 border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_12px_rgba(0,0,0,0.4)]'
+      : 'text-black bg-white/20 border border-white/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),0_4px_12px_rgba(0,0,0,0.08)]';
   };
 
-  const getTextEffect = () => themeMode === 'dark' ? 'drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]' : 'drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]';
+  const getTextEffect = () => themeMode === 'dark' ? '[text-shadow:0_1px_2px_rgba(0,0,0,0.8)]' : '[text-shadow:0_1px_2px_rgba(255,255,255,0.8)]';
 
   const modalStyle = themeMode === 'dark'
     ? 'bg-black/40 backdrop-blur-[30px] backdrop-saturate-[220%] shadow-[0_50px_100px_rgba(0,0,0,0.5),_inset_0_1px_1px_rgba(255,255,255,0.1),_inset_0_-1px_1px_rgba(0,0,0,0.5)] border border-white/10 will-change-[backdrop-filter,transform,opacity] text-white'
@@ -339,9 +327,43 @@ export const Navbar: React.FC = () => {
       />
 
       <nav 
-        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${mobileMenuOpen ? 'bg-transparent' : getGlassStyle('nav')}`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${mobileMenuOpen ? 'bg-transparent' : ''}`}
         onMouseLeave={() => setActiveDropdown(null)}
       >
+        {/* Base Nav Glass */}
+        <div 
+          className={`absolute top-0 left-0 w-full h-full ease-in-out -z-20 transform-gpu backface-hidden transition-all duration-300 ${
+             mobileMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
+          } ${
+             themeMode === 'dark' 
+                ? 'bg-black/20 bg-gradient-to-br from-black/40 via-black/10 to-black/20 backdrop-blur-[25px] backdrop-saturate-[150%] backdrop-contrast-[110%]' 
+                : 'bg-white/10 bg-gradient-to-b from-white/40 via-white/10 to-transparent backdrop-blur-[25px] backdrop-saturate-[200%] backdrop-contrast-[110%] backdrop-brightness-[110%]'
+          } ${
+             themeMode === 'dark'
+                ? 'shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),_inset_0_-1px_2px_rgba(255,255,255,0.02)]'
+                : 'shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),_inset_0_-1px_2px_rgba(255,255,255,0.2),_inset_1px_0_2px_rgba(255,255,255,0.3)]'
+          } ${
+             isScrolled && activeDropdown === null 
+                ? (themeMode === 'dark' ? 'border-b border-white/10 shadow-sm' : 'border-b border-white/30 shadow-sm')
+                : 'border-b border-transparent'
+          }`}
+        />
+
+        {/* Dropdown Glass (Fades in) */}
+        <div 
+          className={`absolute top-0 left-0 w-full h-[360px] ease-in-out pointer-events-none -z-10 transform-gpu backface-hidden transition-opacity duration-300 ${
+             activeDropdown !== null && !mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+          } ${
+             themeMode === 'dark' 
+                ? 'bg-black/20 bg-gradient-to-br from-black/40 via-black/10 to-black/20 backdrop-blur-[25px] backdrop-saturate-[150%] backdrop-contrast-[110%] shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),_0_30px_60px_rgba(0,0,0,0.5)]' 
+                : 'bg-white/10 bg-gradient-to-b from-white/40 via-white/10 to-transparent backdrop-blur-[25px] backdrop-saturate-[200%] backdrop-contrast-[110%] backdrop-brightness-[110%] shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),_inset_1px_0_2px_rgba(255,255,255,0.3),_0_30px_60px_rgba(0,0,0,0.15)]'
+          }`}
+          style={{ 
+             WebkitMaskImage: 'linear-gradient(to bottom, black 0px, black 320px, transparent 360px)',
+             maskImage: 'linear-gradient(to bottom, black 0px, black 320px, transparent 360px)'
+          }}
+        />
+
         <div className="max-w-7xl mx-auto px-6 h-14 md:h-16 flex items-center justify-between relative z-50">
           <Link to="/" className="flex items-center space-x-3 group z-50">
             <Logo size={36} className="group-hover:scale-115 transition-transform" />
@@ -384,8 +406,8 @@ export const Navbar: React.FC = () => {
                     langDropdownOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible pointer-events-none'
                   } ${
                     themeMode === 'dark' 
-                       ? 'bg-[#1a1a1c]/90 backdrop-blur-xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] text-white' 
-                       : 'bg-white/90 backdrop-blur-xl border border-gray-200 shadow-[0_10px_40px_rgba(0,0,0,0.1)] text-gray-900'
+                       ? 'bg-black/40 backdrop-blur-[25px] backdrop-saturate-[150%] border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),_0_10px_40px_rgba(0,0,0,0.5)] text-white' 
+                       : 'glass-liquid text-gray-900'
                   }`}
                 >
                   {languages.map((l: any) => (
@@ -442,8 +464,8 @@ export const Navbar: React.FC = () => {
                   langDropdownOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible pointer-events-none'
                 } ${
                   themeMode === 'dark' 
-                    ? 'bg-[#1a1a1c]/90 backdrop-blur-xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] text-white' 
-                    : 'bg-white/90 backdrop-blur-xl border border-gray-200 shadow-[0_10px_40px_rgba(0,0,0,0.1)] text-gray-900'
+                    ? 'bg-black/40 backdrop-blur-[25px] backdrop-saturate-[150%] border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),_0_10px_40px_rgba(0,0,0,0.5)] text-white' 
+                    : 'glass-liquid text-gray-900'
                 }`}
               >
                 {languages.map((l: any) => (
@@ -482,21 +504,30 @@ export const Navbar: React.FC = () => {
 
         {/* Desktop Dropdown */}
         <div 
-          className={`absolute top-full left-0 w-full overflow-hidden transition-all duration-300 z-10 ${getGlassStyle('dropdown')} ${
-            activeDropdown !== null ? 'opacity-100 visible h-auto' : 'opacity-0 invisible h-0 border-none'
+          className={`absolute top-full left-0 w-full transition-all duration-300 z-10 ${
+            activeDropdown !== null ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4 pointer-events-none'
           }`}
         >
-          <div className={`absolute inset-0 w-full h-full -z-10 ${themeMode === 'dark' ? 'bg-black/20 backdrop-blur-[30px]' : 'bg-white/10 backdrop-blur-[30px]'}`} />
-
-          <div className="max-w-7xl mx-auto px-6 py-10">
-            {activeDropdown !== null && (
-              <div className="grid grid-cols-3 gap-12 animate-fade-in">
+          <div className="max-w-7xl mx-auto px-6 py-10 relative h-[280px]">
+            {navData.map((data, idx) => (
+              <div 
+                key={idx}
+                className={`grid grid-cols-3 gap-12 absolute top-10 left-6 right-6 transition-all duration-300 ease-in-out ${
+                  activeDropdown === idx 
+                    ? 'opacity-100 visible translate-x-0 pointer-events-auto' 
+                    : 'opacity-0 invisible pointer-events-none'
+                } ${
+                  activeDropdown !== null && activeDropdown > idx ? '-translate-x-4' : ''
+                } ${
+                  activeDropdown !== null && activeDropdown < idx ? 'translate-x-4' : ''
+                }`}
+              >
                   <div className={`col-span-1 border-r pr-8 ${themeMode === 'dark' ? 'border-white/10' : 'border-gray-200/20'}`}>
-                    <h3 className={`text-2xl font-bold mb-2 ${themeMode === 'dark' ? 'text-white' : 'text-gray-900'}`}>{navData[activeDropdown].name}</h3>
+                    <h3 className={`text-2xl font-bold mb-2 ${themeMode === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.name}</h3>
                     <p className={`text-sm ${themeMode === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t.selectLang}</p>
                   </div>
                   <div className="col-span-2 grid grid-cols-2 gap-6">
-                    {navData[activeDropdown].items.map((subItem) => (
+                    {data.items.map((subItem) => (
                       <a 
                         key={subItem.title} 
                         href={subItem.href}
@@ -517,7 +548,7 @@ export const Navbar: React.FC = () => {
                     ))}
                   </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </nav>
