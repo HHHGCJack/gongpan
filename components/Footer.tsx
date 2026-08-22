@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Github, Mail } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../App';
 
 type ModalType = 'privacy' | 'terms' | 'contact' | null;
@@ -190,73 +191,95 @@ export const Footer: React.FC = () => {
       </footer>
 
       {/* Shared Modal Overlay */}
-      <div 
-        className={`fixed inset-0 z-[110] flex items-center justify-center px-6 transition-all duration-300 ${
-          activeModal ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
-        }`}
-      >
-        <div className="absolute inset-0 bg-transparent" onClick={closeModal} />
-        
-        <div 
-          className={`relative w-full max-w-md rounded-[2.5rem] p-8 md:p-10 transform transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${modalStyle} ${
-            activeModal ? 'scale-100 translate-y-0 opacity-100' : 'scale-95 translate-y-4 opacity-0'
-          }`}
-        >
-          <button 
-            onClick={closeModal} 
-            className={`absolute top-6 right-6 p-2 rounded-full transition-colors ${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-black/5 hover:bg-black/10'}`}
-          >
-            <X size={20} />
-          </button>
+      <AnimatePresence>
+        {activeModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center px-6 pointer-events-auto">
+            {/* Click-away overlay without full screen blur or darkening */}
+            <div 
+              className="absolute inset-0 bg-transparent" 
+              onClick={closeModal} 
+            />
+            
+            <motion.div 
+              key="footer-modal-card"
+              initial={{ opacity: 0, scale: 0.93, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 10 }}
+              transition={{ 
+                type: "spring",
+                stiffness: 420,
+                damping: 32,
+                mass: 0.7
+              }}
+              className={`relative w-full max-w-md rounded-[2.5rem] p-8 md:p-10 ${modalStyle}`}
+            >
+              <button 
+                onClick={closeModal} 
+                className={`absolute top-6 right-6 p-2 rounded-full transition-colors ${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-black/5 hover:bg-black/10'}`}
+              >
+                <X size={20} />
+              </button>
 
-          {activeModal === 'contact' && (
-            <div className="text-center">
-              <h3 className="text-2xl font-bold mb-2">{t.contact}</h3>
-              <p className={`text-sm mb-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.contactDesc}</p>
-              
-              <div className="space-y-4">
-                <a href="mailto:3387287031@qq.com" className={`flex items-center p-4 rounded-2xl transition-colors border shadow-sm group ${isDark ? 'bg-white/5 hover:bg-white/10 border-white/10' : 'bg-white/50 hover:bg-white/80 border-white/40'}`}>
-                  <div className={`p-3 rounded-full mr-4 group-hover:scale-110 transition-transform ${isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
-                    <Mail size={20} />
-                  </div>
-                  <div className="text-left overflow-hidden">
-                    <div className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Email</div>
-                    <div className="font-medium truncate">3387287031@qq.com</div>
-                  </div>
-                </a>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeModal}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                >
+                  {activeModal === 'contact' && (
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold mb-2">{t.contact}</h3>
+                      <p className={`text-sm mb-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.contactDesc}</p>
+                      
+                      <div className="space-y-4">
+                        <a href="mailto:3387287031@qq.com" className={`flex items-center p-4 rounded-2xl transition-colors border shadow-sm group ${isDark ? 'bg-white/5 hover:bg-white/10 border-white/10' : 'bg-white/50 hover:bg-white/80 border-white/40'}`}>
+                          <div className={`p-3 rounded-full mr-4 group-hover:scale-110 transition-transform ${isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                            <Mail size={20} />
+                          </div>
+                          <div className="text-left overflow-hidden">
+                            <div className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Email</div>
+                            <div className="font-medium truncate">3387287031@qq.com</div>
+                          </div>
+                        </a>
 
-                <a href="https://github.com/gongpan" target="_blank" rel="noopener noreferrer" className={`flex items-center p-4 rounded-2xl transition-colors border shadow-sm group ${isDark ? 'bg-white/5 hover:bg-white/10 border-white/10' : 'bg-white/50 hover:bg-white/80 border-white/40'}`}>
-                   <div className={`p-3 rounded-full mr-4 group-hover:scale-110 transition-transform ${isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-900'}`}>
-                    <Github size={20} />
-                  </div>
-                  <div className="text-left">
-                    <div className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>GitHub</div>
-                    <div className="font-medium">@gongpan</div>
-                  </div>
-                </a>
-              </div>
-            </div>
-          )}
+                        <a href="https://github.com/gongpan" className={`flex items-center p-4 rounded-2xl transition-colors border shadow-sm group ${isDark ? 'bg-white/5 hover:bg-white/10 border-white/10' : 'bg-white/50 hover:bg-white/80 border-white/40'}`}>
+                          <div className={`p-3 rounded-full mr-4 group-hover:scale-110 transition-transform ${isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                            <Github size={20} />
+                          </div>
+                          <div className="text-left">
+                            <div className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>GitHub</div>
+                            <div className="font-medium">@gongpan</div>
+                          </div>
+                        </a>
+                      </div>
+                    </div>
+                  )}
 
-          {activeModal === 'privacy' && (
-            <div>
-              <h3 className="text-2xl font-bold mb-6">{t.privacy}</h3>
-              <div className={`text-sm space-y-4 leading-relaxed h-[300px] overflow-y-auto pr-2 scrollbar-hide flex flex-col ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                {t.privacyContent.map((p, i) => <p key={i}>{p}</p>)}
-              </div>
-            </div>
-          )}
+                  {activeModal === 'privacy' && (
+                    <div>
+                      <h3 className="text-2xl font-bold mb-6">{t.privacy}</h3>
+                      <div className={`text-sm space-y-4 leading-relaxed h-[300px] overflow-y-auto pr-2 scrollbar-hide flex flex-col ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        {t.privacyContent.map((p, i) => <p key={i}>{p}</p>)}
+                      </div>
+                    </div>
+                  )}
 
-          {activeModal === 'terms' && (
-             <div>
-             <h3 className="text-2xl font-bold mb-6">{t.terms}</h3>
-             <div className={`text-sm space-y-4 leading-relaxed h-[300px] overflow-y-auto pr-2 scrollbar-hide flex flex-col ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                {t.termsContent.map((p, i) => <p key={i}>{p}</p>)}
-             </div>
-           </div>
-          )}
-        </div>
-      </div>
+                  {activeModal === 'terms' && (
+                    <div>
+                      <h3 className="text-2xl font-bold mb-6">{t.terms}</h3>
+                      <div className={`text-sm space-y-4 leading-relaxed h-[300px] overflow-y-auto pr-2 scrollbar-hide flex flex-col ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        {t.termsContent.map((p, i) => <p key={i}>{p}</p>)}
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
