@@ -196,12 +196,27 @@ function App() {
   }, [location.pathname]);
 
   useEffect(() => {
-    // Apply theme to document
+    // Apply theme to document and update favicon & bookmark icons
+    const lightIcon = '/logo-light.jpg';
+    const darkIcon = '/logo-dark.jpg';
+    const currentIcon = themeMode === 'dark' ? darkIcon : lightIcon;
+
     if (themeMode === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
+
+    // Dynamically update all browser icon references
+    const favicons = document.querySelectorAll<HTMLLinkElement>('link[rel="icon"], link[rel="shortcut icon"], #dynamic-favicon');
+    favicons.forEach(el => {
+      el.href = currentIcon;
+    });
+
+    const appleIcons = document.querySelectorAll<HTMLLinkElement>('link[rel="apple-touch-icon"]');
+    appleIcons.forEach(el => {
+      el.href = currentIcon;
+    });
   }, [themeMode]);
 
   // Smooth opening of welcome modal on initial site visit

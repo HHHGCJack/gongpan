@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>G胖儿GongPan</title>
+    <!-- Favicon, Manifest & Application Icons for All Browsers & Platforms -->
+    <link id="dynamic-favicon" rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/jpeg" sizes="192x192" href="/logo-light.jpg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0d0d10" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="GongPan" />
+
     <!-- Resource Hints & Image Preconnects for ultra-fast asset loading -->
     <link rel="dns-prefetch" href="https://pic1.imgdb.cn" />
     <link rel="preconnect" href="https://pic1.imgdb.cn" crossorigin />
@@ -20,6 +31,10 @@
           var isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
           if (isDark) {
             document.documentElement.classList.add('dark');
+            var favicon = document.getElementById('dynamic-favicon');
+            if (favicon) {
+              favicon.href = 'https://pic1.imgdb.cn/i/034Btz7qvfI0vFKCCLUwsk.jpg';
+            }
           }
         } catch (e) {}
       })();
