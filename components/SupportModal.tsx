@@ -60,6 +60,35 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     }
   }, [isOpen, onClose]);
 
+  const handleDownload = async () => {
+    const targetUrl = 'https://pic1.imgdb.cn/i/034BLlXycinjzppzDQlRoC.jpg';
+    try {
+      // Try fetching as Blob first so the browser directly prompts download
+      const response = await fetch(targetUrl, { mode: 'cors' });
+      if (!response.ok) throw new Error('Fetch failed');
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = 'GongPan_Support_QR.jpg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch {
+      // Fallback: direct download link / open image in new tab if cross-origin download header restricted
+      const link = document.createElement('a');
+      link.href = targetUrl;
+      link.download = 'GongPan_Support_QR.jpg';
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   const texts = {
     zh: {
       title: '支持我',
@@ -170,10 +199,10 @@ export const SupportModal: React.FC<SupportModalProps> = ({
               </div>
 
               <div className="flex justify-center">
-                <a
-                  href={qrImage || SUPPORT_QR_BASE64}
-                  download="GongPan_Support_QR.jpg"
-                  className={`w-full max-w-[340px] sm:max-w-[420px] py-2 px-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-semibold flex items-center justify-center space-x-2 transition-all duration-200 active:scale-95 shadow-sm ${
+                <button
+                  onClick={handleDownload}
+                  type="button"
+                  className={`w-full max-w-[340px] sm:max-w-[420px] py-2 px-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-semibold flex items-center justify-center space-x-2 transition-all duration-200 active:scale-95 shadow-sm cursor-pointer ${
                     isDark 
                       ? 'bg-white/10 hover:bg-white/15 text-white border border-white/15 hover:border-white/30' 
                       : 'bg-black/5 hover:bg-black/10 text-gray-800 border border-black/10 hover:border-black/20'
@@ -182,7 +211,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 >
                   <Download size={14} />
                   <span>{t.saveQr}</span>
-                </a>
+                </button>
               </div>
             </div>
           </motion.div>
