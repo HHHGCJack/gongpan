@@ -25,6 +25,33 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        target: 'es2020',
+        minify: 'esbuild',
+        cssCodeSplit: true,
+        chunkSizeWarningLimit: 1200,
+        rollupOptions: {
+          output: {
+            manualChunks: (id) => {
+              if (id.includes('pdfjs-dist') || id.includes('react-pdf')) {
+                return 'pdf-vendor';
+              }
+              if (id.includes('@dnd-kit')) {
+                return 'dnd-vendor';
+              }
+              if (id.includes('@supabase')) {
+                return 'supabase-vendor';
+              }
+              if (id.includes('motion')) {
+                return 'motion-vendor';
+              }
+              if (id.includes('lucide-react')) {
+                return 'lucide-vendor';
+              }
+            }
+          }
+        }
       }
     };
 });

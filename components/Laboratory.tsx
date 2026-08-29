@@ -334,7 +334,12 @@ export const Laboratory: React.FC = () => {
   };
 
   return (
-    <div className="flex-grow pt-24 md:pt-28 pb-20 px-4 md:px-8 max-w-7xl mx-auto w-full">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.98, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+      className="flex-grow pt-24 md:pt-28 pb-20 px-4 md:px-8 max-w-7xl mx-auto w-full origin-top will-change-[transform,opacity] transform-gpu"
+    >
       {/* Return home link */}
       <div className="flex items-center mb-6">
         <BackButton />
@@ -851,6 +856,6 @@ export const Laboratory: React.FC = () => {
           </AnimatePresence>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

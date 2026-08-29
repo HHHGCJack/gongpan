@@ -4,8 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>G胖儿GongPan</title>
+    <!-- Resource Hints & Image Preconnects for ultra-fast asset loading -->
+    <link rel="dns-prefetch" href="https://pic1.imgdb.cn" />
+    <link rel="preconnect" href="https://pic1.imgdb.cn" crossorigin />
     <link rel="preconnect" href="https://images.unsplash.com" />
     <link rel="preconnect" href="https://img2.nloln.de" />
+
+    <!-- Preload critical logos for instant theme switching & zero-lag rendering -->
+    <link rel="preload" as="image" href="https://pic1.imgdb.cn/i/034Btz7zzuwPNEbWvK0iIG.jpg" fetchpriority="high" />
+    <link rel="preload" as="image" href="https://pic1.imgdb.cn/i/034Btz7qvfI0vFKCCLUwsk.jpg" fetchpriority="high" />
+    <script>
+      (function() {
+        try {
+          var savedTheme = localStorage.getItem('gongpan_theme');
+          var isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <style>
       /* Smooth scrolling */
       html { scroll-behavior: smooth; }

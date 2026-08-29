@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { useTheme } from '../App';
 import { Upload, FileText, Image as ImageIcon, Loader2, Lock, Edit2, Save, Trash2, Book, Equal, QrCode, RefreshCw } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
@@ -89,7 +90,14 @@ const SortableBookItem: React.FC<SortableBookItemProps> = ({
 
       {/* Cover Thumbnail */}
       <div className="w-20 h-28 shrink-0 rounded-md overflow-hidden bg-gray-200">
-        <img src={book.coverUrl} alt={book.title} className="w-full h-full object-cover" />
+        <img 
+          src={book.coverUrl} 
+          alt={book.title} 
+          loading="lazy" 
+          decoding="async" 
+          referrerPolicy="no-referrer" 
+          className="w-full h-full object-cover" 
+        />
       </div>
       
       {/* Content */}
@@ -506,9 +514,9 @@ export const Admin: React.FC = () => {
 
   const getGlassClasses = () => {
     if (isDark) {
-      return 'bg-black/40 backdrop-blur-[30px] backdrop-saturate-[220%] shadow-[0_50px_100px_rgba(0,0,0,0.5),_inset_0_1px_1px_rgba(255,255,255,0.1),_inset_0_-1px_1px_rgba(0,0,0,0.5)] border border-white/10 text-white';
+      return 'liquid-glass liquid-glass-dark text-white shadow-[0_40px_100px_rgba(0,0,0,0.8),inset_0_1.5px_2px_rgba(255,255,255,0.25)]';
     }
-    return 'bg-white/40 backdrop-blur-[30px] backdrop-saturate-[220%] shadow-[0_50px_100px_rgba(0,0,0,0.2),_inset_0_1px_1px_rgba(255,255,255,0.8),_inset_0_-1px_1px_rgba(255,255,255,0.1)] border border-white/30 text-gray-900';
+    return 'liquid-glass liquid-glass-light text-gray-900 shadow-[0_40px_100px_rgba(0,0,0,0.12),inset_0_2px_3px_rgba(255,255,255,1)]';
   };
 
   const getInputClasses = () => {
@@ -519,7 +527,12 @@ export const Admin: React.FC = () => {
   };
 
   return (
-    <main className="flex-grow pt-24 pb-32 px-6 max-w-4xl mx-auto w-full relative z-10">
+    <motion.main 
+      initial={{ opacity: 0, scale: 0.98, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+      className="flex-grow pt-24 pb-32 px-6 max-w-4xl mx-auto w-full relative z-10 origin-top will-change-[transform,opacity] transform-gpu"
+    >
       <div className="flex items-center mb-6">
         <BackButton />
       </div>
@@ -839,15 +852,14 @@ export const Admin: React.FC = () => {
                     <p className={`text-xs font-semibold mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>当前生效的收款码预览：</p>
                     <div className="max-w-md bg-white p-2 rounded-2xl shadow-md border border-gray-200/50">
                       <img 
-                        src={adminQrImage} 
+                        src={adminQrImage || SUPPORT_QR_BASE64} 
                         alt="Current Support QR Code" 
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
                         onError={(e) => {
                           const target = e.currentTarget;
-                          const currentSrc = target.src;
-                          const currentIndex = SUPPORT_QR_SOURCES.findIndex(s => currentSrc.includes(s) || currentSrc === s);
-                          if (currentIndex !== -1 && currentIndex + 1 < SUPPORT_QR_SOURCES.length) {
-                            target.src = SUPPORT_QR_SOURCES[currentIndex + 1];
-                          } else {
+                          if (target.src !== SUPPORT_QR_BASE64) {
                             target.src = SUPPORT_QR_BASE64;
                           }
                         }}
@@ -861,6 +873,6 @@ export const Admin: React.FC = () => {
           </>
         )}
       </div>
-    </main>
+    </motion.main>
   );
 };

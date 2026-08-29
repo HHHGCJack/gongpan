@@ -7,15 +7,16 @@ export const SUPPORT_QR_BASE64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQA
 
 // Priority list for seamless failover:
 // 1. ImgDB (China domestic top speed)
+// 1. Base64 (0ms guaranteed instant offline & zero-failure rendering)
 // 2. Local App Server (Same origin zero cross-domain issue)
 // 3. FreeImage.host / Cloudflare (Global Anycast)
-// 4. Base64 (0ms guaranteed offline rendering)
+// 4. ImgDB
 export const SUPPORT_QR_SOURCES = [
-  SUPPORT_QR_IMGDB,
+  SUPPORT_QR_BASE64,
   SUPPORT_QR_LOCAL,
-  SUPPORT_QR_FREEIMAGE,
   SUPPORT_QR_API,
-  SUPPORT_QR_BASE64
+  SUPPORT_QR_FREEIMAGE,
+  SUPPORT_QR_IMGDB
 ];
 
-export const DEFAULT_SUPPORT_QR = SUPPORT_QR_IMGDB;
+export const DEFAULT_SUPPORT_QR = SUPPORT_QR_BASE64;

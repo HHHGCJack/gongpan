@@ -1,35 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, ChevronRight, ExternalLink, Moon, Sun, Globe } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { 
+  Menu, 
+  X, 
+  ChevronDown, 
+  ChevronRight, 
+  ExternalLink, 
+  Moon, 
+  Sun, 
+  Globe, 
+  ArrowLeft, 
+  ArrowUpRight, 
+  Sparkles,
+  Heart
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../App';
 import { Logo } from './Logo';
-import { 
-  DEFAULT_SUPPORT_QR, 
-  SUPPORT_QR_IMGDB, 
-  SUPPORT_QR_FREEIMAGE, 
-  SUPPORT_QR_LOCAL, 
-  SUPPORT_QR_BASE64, 
-  SUPPORT_QR_SOURCES 
-} from '../src/assets/support_qr_base64';
-
-export { DEFAULT_SUPPORT_QR };
+import { showcaseData } from '../src/data/showcases';
+import { useCardTransition } from '../src/context/CardTransitionContext';
+import { scrollToElementSmoothly } from '../src/utils/smoothScroll';
 
 export const Navbar: React.FC = () => {
-  const { themeMode, setThemeMode, language, setLanguage, showToast, pansouEnabled } = useTheme();
-  const [qrImage, setQrImage] = useState<string>(() => {
-    const saved = localStorage.getItem('custom_support_qr');
-    // If user has old broken telegram/nloln url, reset to new high-speed source
-    if (saved && (saved.includes('nloln.de') || saved.includes('img2.') || saved.includes('support_qr_code_1787368553422'))) {
-      localStorage.removeItem('custom_support_qr');
-      return DEFAULT_SUPPORT_QR;
-    }
-    return saved || DEFAULT_SUPPORT_QR;
-  });
+  const { themeMode, setThemeMode, language, setLanguage, showToast, pansouEnabled, openWelcomeModal, openSupportModal } = useTheme();
+  const { startCollapse, status } = useCardTransition();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleBackToHome = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    navigate('/');
+  };
+
+  const isShowcasePage = location.pathname.startsWith('/showcase/');
+  const currentShowcaseId = isShowcasePage ? location.pathname.replace('/showcase/', '') : '';
+  const currentShowcase = currentShowcaseId && showcaseData[currentShowcaseId]
+    ? (showcaseData[currentShowcaseId][language] || showcaseData[currentShowcaseId].zh)
+    : null;
 
   const translations = {
     zh: {
       brand: 'G胖儿GongPan',
+      backToHome: '返回主页',
       nav: {
         learn: '学习',
         entertainment: '娱乐',
@@ -47,9 +59,11 @@ export const Navbar: React.FC = () => {
       pansouDisabled: '因政策原因暂停服务',
       comingSoon: '敬请期待 Coming Soon',
       selectLang: '精选优质资源',
+      visitNow: '立即访问',
     },
     en: {
       brand: 'GongPan',
+      backToHome: 'Back Home',
       nav: {
         learn: 'Learn',
         entertainment: 'Entertainment',
@@ -67,9 +81,11 @@ export const Navbar: React.FC = () => {
       pansouDisabled: 'Service suspended due to policy',
       comingSoon: 'Coming Soon',
       selectLang: 'Premium Resources',
+      visitNow: 'Visit Now',
     },
     ja: {
       brand: 'GongPan',
+      backToHome: 'ホームに戻る',
       nav: { learn: '学習', entertainment: 'エンターテイメント', tech: 'テクノロジー' },
       items: {
         readingPro: { title: 'ジャーナル精読', desc: '国際的なジャーナルの深い解釈' },
@@ -83,9 +99,11 @@ export const Navbar: React.FC = () => {
       pansouDisabled: '制限によりサービス停止中',
       comingSoon: '近日公開',
       selectLang: 'プレミアムリソース',
+      visitNow: '今すぐアクセス',
     },
     ko: {
       brand: 'GongPan',
+      backToHome: '홈으로 돌아가기',
       nav: { learn: '학습', entertainment: '엔터테인먼트', tech: '기술' },
       items: {
         readingPro: { title: '저널 정독', desc: '국제 저널 심층 해석' },
@@ -99,9 +117,11 @@ export const Navbar: React.FC = () => {
       pansouDisabled: '정책으로 인해 서비스 중지',
       comingSoon: '출시 예정',
       selectLang: '프리미엄 리소스',
+      visitNow: '지금 방문',
     },
     es: {
       brand: 'GongPan',
+      backToHome: 'Volver al Inicio',
       nav: { learn: 'Aprender', entertainment: 'Entretenimiento', tech: 'Tecnología' },
       items: {
         readingPro: { title: 'Lectura de Revistas', desc: 'Revistas internacionales' },
@@ -115,9 +135,11 @@ export const Navbar: React.FC = () => {
       pansouDisabled: 'Servicio suspendido',
       comingSoon: 'Próximamente',
       selectLang: 'Recursos Premium',
+      visitNow: 'Visitar Ahora',
     },
     fr: {
       brand: 'GongPan',
+      backToHome: 'Retour à l\'Accueil',
       nav: { learn: 'Apprendre', entertainment: 'Divertissement', tech: 'Technologie' },
       items: {
         readingPro: { title: 'Lecture de Revues', desc: 'Revues internationales' },
@@ -131,9 +153,11 @@ export const Navbar: React.FC = () => {
       pansouDisabled: 'Service suspendu',
       comingSoon: 'Bientôt disponible',
       selectLang: 'Ressources Premium',
+      visitNow: 'Visiter',
     },
     de: {
       brand: 'GongPan',
+      backToHome: 'Zurück zur Startseite',
       nav: { learn: 'Lernen', entertainment: 'Unterhaltung', tech: 'Technologie' },
       items: {
         readingPro: { title: 'Zeitschriften-Lektüre', desc: 'Internationale Zeitschriften' },
@@ -147,9 +171,11 @@ export const Navbar: React.FC = () => {
       pansouDisabled: 'Dienst ausgesetzt',
       comingSoon: 'Demnächst',
       selectLang: 'Premium-Ressourcen',
+      visitNow: 'Jetzt besuchen',
     },
     el: {
       brand: 'GongPan',
+      backToHome: 'Επιστροφή στην Αρχική',
       nav: { learn: 'Μαθαίνω', entertainment: 'Ψυχαγωγία', tech: 'Τεχνολογία' },
       items: {
         readingPro: { title: 'Μελέτη Περιοδικών', desc: 'Διεθνή περιοδικά' },
@@ -163,6 +189,7 @@ export const Navbar: React.FC = () => {
       pansouDisabled: 'Η υπηρεσία έχει ανασταλεί',
       comingSoon: 'Σύντομα',
       selectLang: 'Premium Πόροι',
+      visitNow: 'Επίσκεψη Τώρα',
     }
   };
 
@@ -171,26 +198,28 @@ export const Navbar: React.FC = () => {
   const navData = [
     { 
       name: t.nav.learn, 
+      targetId: 'section-learn',
       items: [
-        { title: t.items.readingPro.title, desc: t.items.readingPro.desc, href: '/reading-pro' }
+        { title: t.items.readingPro.title, desc: t.items.readingPro.desc, href: '/showcase/reading-pro' }
       ] 
     },
     { 
       name: t.nav.entertainment, 
+      targetId: 'section-entertainment',
       items: [
         { 
           title: t.items.pansou.title, 
           desc: t.items.pansou.desc, 
-          href: pansouEnabled ? 'http://gongcheng.yyboxdns.com:12309' : '#',
-          onToast: () => !pansouEnabled ? showToast(t.pansouDisabled) : undefined
+          href: '/showcase/pansou'
         },
-        { title: t.items.chat.title, desc: t.items.chat.desc, href: 'http://gongcheng.yyboxdns.com:21312/' }
+        { title: t.items.chat.title, desc: t.items.chat.desc, href: '/showcase/chat' }
       ] 
     },
     { 
       name: t.nav.tech, 
+      targetId: 'section-tech',
       items: [
-        { title: t.items.ai.title, desc: t.items.ai.desc, href: 'https://cash.gongpan.org' },
+        { title: t.items.ai.title, desc: t.items.ai.desc, href: '/showcase/ai-agent' },
         { title: t.items.lab.title, desc: t.items.lab.desc, href: '/laboratory' }
       ] 
     }
@@ -198,9 +227,7 @@ export const Navbar: React.FC = () => {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showSupportModal, setShowSupportModal] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
-  // Allow multiple categories to be expanded simultaneously (collapsed by default)
   const [mobileExpandedCategories, setMobileExpandedCategories] = useState<Record<number, boolean>>({});
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
@@ -289,27 +316,9 @@ export const Navbar: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const shouldLock = mobileMenuOpen || showSupportModal;
-    document.body.style.overflow = shouldLock ? 'hidden' : '';
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
-  }, [mobileMenuOpen, showSupportModal]);
-
-  useEffect(() => {
-    // Check if server or storage has an updated QR code
-    fetch('/api/support-qr')
-      .then(res => {
-        if (res.ok) return res.blob();
-        throw new Error('No custom server qr');
-      })
-      .then(blob => {
-        const url = URL.createObjectURL(blob);
-        setQrImage(url);
-      })
-      .catch(() => {
-        const saved = localStorage.getItem('custom_support_qr');
-        if (saved) setQrImage(saved);
-      });
-  }, []);
+  }, [mobileMenuOpen]);
 
   const toggleMobileItem = (index: number) => {
     setMobileExpandedCategories(prev => ({
@@ -319,11 +328,11 @@ export const Navbar: React.FC = () => {
   };
 
   const handleSupportClick = () => {
-    setShowSupportModal(true);
+    if (openSupportModal) {
+      openSupportModal();
+    }
     setMobileMenuOpen(false);
   };
-
-  const navigate = useNavigate();
 
   const handleItemClick = (e: React.MouseEvent, title: string, href: string, subItem?: any) => {
     if (href === '#') {
@@ -350,21 +359,45 @@ export const Navbar: React.FC = () => {
     setActiveDropdown(null);
   };
 
+  const handleCategoryClick = (targetId?: string) => {
+    setActiveDropdown(null);
+    setMobileMenuOpen(false);
+    if (!targetId) return;
+
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        scrollToElementSmoothly(targetId);
+      }, 100);
+    } else {
+      scrollToElementSmoothly(targetId);
+    }
+  };
+
+  const handleShowcaseVisit = () => {
+    if (!currentShowcase) return;
+    if (currentShowcase.requiresPansouCheck && !pansouEnabled) {
+      showToast(language === 'zh' ? '因政策原因暂停服务' : 'Service suspended due to policy');
+      return;
+    }
+    if (currentShowcase.isExternal) {
+      window.open(currentShowcase.targetUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      navigate(currentShowcase.targetUrl);
+    }
+  };
+
   const getNavPillStyle = (isActive: boolean) => {
     const isDark = themeMode === 'dark';
     if (!isActive) {
       return isDark ? 'text-gray-300 hover:text-white border border-transparent' : 'text-gray-600 hover:text-black border border-transparent';
     }
     return isDark 
-      ? 'text-white bg-white/10 border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_12px_rgba(0,0,0,0.4)]'
-      : 'text-black bg-white/20 border border-white/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),0_4px_12px_rgba(0,0,0,0.08)]';
+      ? 'text-white liquid-glass-pill-dark font-bold'
+      : 'text-black liquid-glass-pill-light font-bold';
   };
 
   const getTextEffect = () => themeMode === 'dark' ? '[text-shadow:0_1px_2px_rgba(0,0,0,0.8)]' : '';
-
-  const modalStyle = themeMode === 'dark'
-    ? 'bg-black/40 backdrop-blur-[30px] backdrop-saturate-[220%] shadow-[0_50px_100px_rgba(0,0,0,0.5),_inset_0_1px_1px_rgba(255,255,255,0.1),_inset_0_-1px_1px_rgba(0,0,0,0.5)] border border-white/10 text-white'
-    : 'bg-white/70 backdrop-blur-[30px] backdrop-saturate-[180%] shadow-[0_50px_100px_rgba(0,0,0,0.08),_inset_0_1px_1px_rgba(255,255,255,0.9)] border border-white/30 text-gray-900';
 
   const toggleTheme = () => {
     setThemeMode(themeMode === 'light' ? 'dark' : 'light');
@@ -377,7 +410,7 @@ export const Navbar: React.FC = () => {
         className={`hidden lg:block fixed inset-0 z-30 pointer-events-none transition-opacity duration-300 ease-out ${
           activeDropdown !== null ? 'opacity-100' : 'opacity-0'
         } ${
-          themeMode === 'dark' ? 'bg-black/40' : 'bg-black/15'
+          themeMode === 'dark' ? 'bg-black/50 backdrop-blur-sm' : 'bg-black/20 backdrop-blur-sm'
         }`}
       />
 
@@ -391,31 +424,26 @@ export const Navbar: React.FC = () => {
           }
         }}
       >
-        {/* Base Nav Glass */}
+        {/* Base Nav Glass with Liquid Specular Highlight */}
         <div 
-          className={`absolute top-0 left-0 w-full h-full -z-20 ${
+          className={`absolute top-0 left-0 w-full h-full -z-20 liquid-glass ${
              themeMode === 'dark' 
-                ? 'bg-black/20 bg-gradient-to-br from-black/40 via-black/10 to-black/20 backdrop-blur-[25px] backdrop-saturate-[150%] backdrop-contrast-[110%]' 
-                : 'bg-white/50 bg-gradient-to-b from-white/75 via-white/45 to-white/20 backdrop-blur-[24px] backdrop-saturate-[180%]'
-          } ${
-             themeMode === 'dark'
-                ? 'shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),_inset_0_-1px_2px_rgba(255,255,255,0.02)]'
-                : 'shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),_0_1px_2px_rgba(0,0,0,0.02)]'
-          } ${
-             isScrolled && activeDropdown === null 
-                ? (themeMode === 'dark' ? 'border-b border-white/10 shadow-sm' : 'border-b border-black/[0.06] shadow-sm')
-                : 'border-b border-transparent'
+                ? 'bg-black/30 bg-gradient-to-b from-white/10 via-black/20 to-black/40 border-b border-white/15 shadow-[0_4px_30px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.25)]' 
+                : 'bg-white/40 bg-gradient-to-b from-white/80 via-white/40 to-white/20 border-b border-white/60 shadow-[0_4px_30px_rgba(0,0,0,0.04),inset_0_1.5px_1.5px_rgba(255,255,255,0.9)]'
           }`}
         />
+        
+        {/* Specular Liquid Edge Line */}
+        <div className="absolute top-0 left-[5%] right-[5%] h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/40 to-transparent pointer-events-none -z-10" />
 
-        {/* Dropdown Glass (Fades in with ultra-smooth progressive feathered mask - Desktop Only) */}
+        {/* Dropdown Glass */}
         <div 
-          className={`hidden lg:block absolute top-0 left-0 w-full h-[380px] pointer-events-none -z-10 transition-opacity duration-300 ${
+          className={`hidden lg:block absolute top-0 left-0 w-full h-[380px] pointer-events-none -z-10 transition-opacity duration-300 liquid-glass-heavy ${
              activeDropdown !== null ? 'opacity-100' : 'opacity-0'
           } ${
              themeMode === 'dark' 
-                ? 'bg-black/20 bg-gradient-to-b from-black/40 via-black/10 to-transparent backdrop-blur-[25px] backdrop-saturate-[150%] backdrop-contrast-[110%]' 
-                : 'bg-white/60 bg-gradient-to-b from-white/80 via-white/50 to-transparent backdrop-blur-[24px] backdrop-saturate-[180%]'
+                ? 'bg-black/40 bg-gradient-to-b from-white/10 via-black/20 to-transparent border-b border-white/10' 
+                : 'bg-white/60 bg-gradient-to-b from-white/90 via-white/50 to-transparent border-b border-white/50'
           }`}
           style={{ 
              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0.85) 72%, rgba(0,0,0,0.5) 84%, rgba(0,0,0,0.15) 94%, rgba(0,0,0,0) 100%)',
@@ -423,53 +451,115 @@ export const Navbar: React.FC = () => {
           }}
         />
 
-        <div className="max-w-7xl mx-auto px-6 h-14 md:h-16 flex items-center justify-between relative z-50">
-          <Link to="/" className="flex items-center space-x-3 group z-50">
-            <Logo size={36} className="group-hover:scale-115 transition-transform" />
-            <span className={`text-xl font-bold tracking-tight relative ${getTextEffect()} ${themeMode === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {t.brand}
-            </span>
-          </Link>
-
-          <div className="hidden lg:flex items-center space-x-2 h-full">
-            {navData.map((item, idx) => (
-              <div 
-                key={item.name} 
-                className="h-full flex items-center"
-                onMouseEnter={() => handleNavTabEnter(idx)}
-              >
-                <button className={`px-5 py-2 text-sm font-semibold transition-all duration-200 rounded-full ${getNavPillStyle(activeDropdown === idx)} ${getTextEffect()}`}>
-                  {item.name}
-                </button>
-              </div>
-            ))}
-            
-            <div className="flex items-center space-x-2 ml-4">
-              <div 
-                className="relative flex items-center"
-                onMouseEnter={handleLangMouseEnter}
-                onMouseLeave={handleLangMouseLeave}
-              >
-                <button 
-                  onClick={handleLangClick}
-                  className={`px-3 py-2 rounded-full transition-colors flex items-center space-x-1 ${themeMode === 'dark' ? 'hover:bg-white/10 text-gray-300' : 'hover:bg-black/5 text-gray-600'}`} 
-                  title="切换语言 / Switch Language"
-                >
-                  <Globe size={18} />
-                  <span className="text-xs font-semibold uppercase">{languages.find((l: any) => l.code === language)?.label || 'EN'}</span>
-                </button>
-                
-                {/* Desktop Lang Dropdown */}
-                <div 
-                  className={`absolute top-full right-0 mt-2 w-32 rounded-2xl overflow-hidden transition-[opacity,transform] duration-150 origin-top flex flex-col z-[100] ${
-                    langDropdownOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
-                  } ${
-                    themeMode === 'dark' 
-                       ? 'bg-black/40 backdrop-blur-[25px] backdrop-saturate-[150%] border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),_0_10px_40px_rgba(0,0,0,0.5)] text-white' 
-                       : 'glass-liquid text-gray-900'
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 md:h-16 flex items-center justify-between relative z-50">
+          
+          {/* LEFT: Showcase Specific Back Button OR Global Brand Logo */}
+          <div className="flex items-center space-x-3">
+            {isShowcasePage ? (
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <button
+                  onClick={handleBackToHome}
+                  className={`group relative px-3.5 py-1.5 rounded-full flex items-center space-x-1.5 text-xs sm:text-sm font-bold transition-all duration-300 active:scale-95 overflow-hidden ${
+                    themeMode === 'dark'
+                      ? 'liquid-glass liquid-glass-pill-dark text-white border border-white/25 shadow-[0_4px_20px_rgba(0,0,0,0.4),inset_0_1.5px_1.5px_rgba(255,255,255,0.35)] hover:border-white/40 hover:bg-white/15'
+                      : 'liquid-glass liquid-glass-pill-light text-gray-900 border border-white/80 shadow-[0_4px_20px_rgba(0,0,0,0.06),inset_0_1.5px_1.5px_rgba(255,255,255,1)] hover:border-white hover:bg-white/80'
                   }`}
+                  title={t.backToHome}
                 >
-                  {languages.map((l: any) => (
+                  <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none bg-gradient-to-b from-white/30 dark:from-white/15 to-transparent" />
+                  <ArrowLeft size={15} className="transition-transform duration-200 group-hover:-translate-x-0.5 relative z-10" />
+                  <span className="hidden sm:inline relative z-10">{t.backToHome}</span>
+                </button>
+
+                {currentShowcase && (
+                  <div className="flex items-center space-x-2 border-l border-black/10 dark:border-white/10 pl-2 sm:pl-3">
+                    <span className="text-sm sm:text-base font-black tracking-tight truncate max-w-[140px] sm:max-w-xs">
+                      {currentShowcase.title}
+                    </span>
+                    <span className="hidden md:inline-flex text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                      SHOWCASE
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link to="/" className="flex items-center space-x-3 group z-50">
+                <Logo size={36} className="group-hover:scale-115 transition-transform" />
+                <span className={`text-xl font-bold tracking-tight relative ${getTextEffect()} ${themeMode === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  {t.brand}
+                </span>
+              </Link>
+            )}
+          </div>
+
+          {/* CENTER: Showcase CTA or Main Navigation */}
+          {isShowcasePage && currentShowcase ? (
+            <div className="hidden md:flex items-center space-x-3">
+              <span className="text-xs font-mono text-gray-400">
+                {currentShowcase.tag}
+              </span>
+            </div>
+          ) : (
+            <div className="hidden lg:flex items-center space-x-2 h-full">
+              {navData.map((item, idx) => (
+                <div 
+                  key={item.name} 
+                  className="h-full flex items-center"
+                  onMouseEnter={() => handleNavTabEnter(idx)}
+                >
+                  <button 
+                    onClick={() => handleCategoryClick(item.targetId)}
+                    className={`px-5 py-2 text-sm font-semibold transition-all duration-200 rounded-full ${getNavPillStyle(activeDropdown === idx)} ${getTextEffect()}`}
+                  >
+                    {item.name}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* RIGHT: Actions */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
+            
+            {/* Direct Visit CTA on Showcase Page */}
+            {isShowcasePage && currentShowcase && (
+              <button
+                onClick={handleShowcaseVisit}
+                className="hidden sm:flex items-center space-x-1.5 px-4 py-1.5 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-500/20 active:scale-95 transition-all mr-1"
+              >
+                <span>{currentShowcase.ctaText || t.visitNow}</span>
+                <ArrowUpRight size={14} />
+              </button>
+            )}
+
+            {/* Language Switcher */}
+            <div 
+              className="relative flex items-center"
+              onMouseEnter={handleLangMouseEnter}
+              onMouseLeave={handleLangMouseLeave}
+            >
+              <button 
+                onClick={handleLangClick}
+                className={`px-3 py-1.5 sm:py-2 rounded-full transition-colors flex items-center space-x-1.5 ${themeMode === 'dark' ? 'hover:bg-white/10 text-gray-200' : 'hover:bg-black/5 text-gray-700'}`} 
+                title="切换语言 / Switch Language"
+              >
+                <Globe size={18} />
+                <span className="text-sm font-semibold tracking-wide uppercase">{languages.find((l: any) => l.code === language)?.label || 'EN'}</span>
+              </button>
+              
+              {/* Desktop Lang Dropdown */}
+              <div 
+                className={`absolute top-full right-0 mt-2 w-32 rounded-2xl overflow-hidden transition-[opacity,transform] duration-150 origin-top flex flex-col z-[100] p-1.5 liquid-glass border ${
+                  langDropdownOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
+                } ${
+                  themeMode === 'dark' 
+                     ? 'liquid-glass-dark text-white border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.25)]' 
+                     : 'liquid-glass-light text-gray-900 border-white/80 shadow-[0_20px_50px_rgba(0,0,0,0.1),inset_0_1px_1.5px_rgba(255,255,255,0.95)]'
+                }`}
+              >
+                {languages.map((l: any) => {
+                  const isSelected = language === l.code;
+                  return (
                     <button
                       key={l.code}
                       onClick={(e) => {
@@ -477,94 +567,59 @@ export const Navbar: React.FC = () => {
                         setLanguage(l.code as any);
                         setLangDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                        language === l.code
-                          ? (themeMode === 'dark' ? 'bg-white/10 text-white font-semibold' : 'bg-black/5 text-black font-semibold')
-                          : (themeMode === 'dark' ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-black/5 text-gray-700')
+                      className={`w-full text-left pl-3.5 pr-4 py-1.5 text-xs sm:text-[13px] rounded-xl transition-all duration-150 flex items-center justify-between group ${
+                        isSelected
+                          ? (themeMode === 'dark' 
+                              ? 'bg-white/[0.14] text-white font-bold shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)] border border-white/20' 
+                              : 'bg-black/[0.07] text-gray-950 font-bold shadow-[inset_0_1px_1px_rgba(0,0,0,0.06)] border border-black/[0.08]')
+                          : (themeMode === 'dark' 
+                              ? 'hover:bg-white/[0.08] text-white/70 hover:text-white border border-transparent font-medium' 
+                              : 'hover:bg-black/[0.04] text-gray-600 hover:text-gray-950 border border-transparent font-medium')
                       }`}
                     >
-                      {l.name}
+                      <span className="tracking-tight">{l.name}</span>
                     </button>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-              <button onClick={toggleTheme} className={`p-2 rounded-full transition-colors ${themeMode === 'dark' ? 'hover:bg-white/10 text-gray-300' : 'hover:bg-black/5 text-gray-600'}`} title="切换主题 / Switch Theme">
-                {themeMode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-              </button>
+            </div>
+
+            {/* Dark Mode Switcher */}
+            <button onClick={toggleTheme} className={`p-2 rounded-full transition-colors ${themeMode === 'dark' ? 'hover:bg-white/10 text-gray-300' : 'hover:bg-black/5 text-gray-600'}`} title="切换主题 / Switch Theme">
+              {themeMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
+            {/* Support Me Button */}
+            {!isShowcasePage && (
               <button 
                 onClick={handleSupportClick}
-                className={`ml-2 px-5 py-2 text-sm font-semibold transition-all duration-200 rounded-full active:scale-95 ${
+                className={`hidden sm:inline-block ml-1 px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-200 rounded-full active:scale-95 ${
                   themeMode === 'dark'
-                    ? 'text-white bg-white/10 border border-white/20 hover:bg-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_12px_rgba(0,0,0,0.4)]'
-                    : 'text-black bg-white/20 border border-white/50 hover:bg-white/35 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),0_4px_12px_rgba(0,0,0,0.08)]'
+                    ? 'liquid-glass-pill-dark text-white hover:bg-white/20'
+                    : 'liquid-glass-pill-light text-black hover:bg-white/70'
                 }`}
               >
                 {t.support}
               </button>
-            </div>
-          </div>
+            )}
 
-          <div className="lg:hidden flex items-center justify-center -mr-2 space-x-1">
-            <div className="relative">
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLangDropdownOpen(!langDropdownOpen);
-                }}
-                className={`px-3 py-2 rounded-full active:bg-black/5 flex items-center space-x-1 ${themeMode === 'dark' ? 'text-white' : 'text-gray-800'}`}
-              >
-                <Globe size={18} />
-                <span className="text-xs font-semibold uppercase">{languages.find((l: any) => l.code === language)?.label || 'EN'}</span>
-              </button>
-
-              {/* Mobile Lang Dropdown */}
-              <div 
-                className={`absolute top-full right-0 mt-2 w-32 rounded-2xl overflow-hidden transition-[opacity,transform] duration-150 origin-top flex flex-col z-[100] ${
-                  langDropdownOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
-                } ${
-                  themeMode === 'dark' 
-                    ? 'bg-black/40 backdrop-blur-[30px] backdrop-saturate-[220%] border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),_0_10px_40px_rgba(0,0,0,0.5)] text-white' 
-                    : 'bg-white/70 backdrop-blur-[30px] backdrop-saturate-[180%] border border-white/30 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),_0_10px_40px_rgba(0,0,0,0.08)] text-gray-900'
-                }`}
-              >
-                {languages.map((l: any) => (
-                  <button
-                    key={l.code}
-                    onClick={() => {
-                      setLanguage(l.code as any);
-                      setLangDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                      language === l.code
-                        ? (themeMode === 'dark' ? 'bg-white/10 text-white font-semibold' : 'bg-black/5 text-black font-semibold')
-                        : (themeMode === 'dark' ? 'active:bg-white/5 text-gray-300' : 'active:bg-black/5 text-gray-700')
-                    }`}
-                  >
-                    {l.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <button onClick={toggleTheme} className={`p-2 rounded-full active:bg-black/5 ${themeMode === 'dark' ? 'text-white' : 'text-gray-800'}`}>
-              {themeMode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+            {/* Mobile Menu Button */}
             <button 
-              className={`p-2 rounded-full active:bg-black/5 ${themeMode === 'dark' ? 'text-white' : 'text-gray-800'}`}
+              className={`lg:hidden p-2 rounded-full active:bg-black/5 ${themeMode === 'dark' ? 'text-white' : 'text-gray-800'}`}
               onClick={() => {
                 setMobileMenuOpen(!mobileMenuOpen);
                 setLangDropdownOpen(false);
               }}
             >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
 
-        {/* Desktop Dropdown */}
+        {/* Desktop Navigation Dropdown Content */}
         <div 
           className={`hidden lg:block absolute top-full left-0 w-full transition-[opacity,transform] duration-200 z-10 ${
-            activeDropdown !== null ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none'
+            activeDropdown !== null && !isShowcasePage ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none'
           }`}
           onMouseEnter={() => {
             if (navTimeoutRef.current) {
@@ -599,11 +654,11 @@ export const Navbar: React.FC = () => {
                             : 'hover:bg-white/30 hover:shadow-[inset_0_0_10px_rgba(255,255,255,0.2)]'
                         }`}
                       >
-                        <div className="flex items-center mb-1">
-                          <span className={`font-semibold ${themeMode === 'dark' ? 'text-white' : 'text-gray-900'}`}>{subItem.title}</span>
-                          <ExternalLink size={14} className="ml-2 opacity-50" />
+                        <div className={`font-semibold text-lg mb-1 flex items-center space-x-1 ${themeMode === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                          <span>{subItem.title}</span>
+                          <ChevronRight size={16} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                         </div>
-                        <p className={`text-xs ${themeMode === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{subItem.desc}</p>
+                        <div className={`text-sm ${themeMode === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{subItem.desc}</div>
                       </a>
                     ))}
                   </div>
@@ -611,9 +666,8 @@ export const Navbar: React.FC = () => {
             ))}
           </div>
         </div>
-      </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Full Screen Liquid Glass Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div 
@@ -644,6 +698,26 @@ export const Navbar: React.FC = () => {
               }`}
             >
               <div className="flex flex-col pb-16">
+                {isShowcasePage && (
+                  <div className="mb-4">
+                    <button
+                      onClick={() => {
+                        navigate('/');
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center space-x-2 transition-all duration-300 active:scale-95 border relative overflow-hidden ${
+                        themeMode === 'dark'
+                          ? 'liquid-glass liquid-glass-pill-dark text-white border-white/25 shadow-[0_8px_25px_rgba(0,0,0,0.5),inset_0_1.5px_1.5px_rgba(255,255,255,0.3)] hover:bg-white/15'
+                          : 'liquid-glass liquid-glass-pill-light text-gray-900 border-white/80 shadow-[0_8px_25px_rgba(0,0,0,0.08),inset_0_1.5px_1.5px_rgba(255,255,255,1)] hover:bg-white/80'
+                      }`}
+                    >
+                      <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none bg-gradient-to-b from-white/30 dark:from-white/15 to-transparent" />
+                      <ArrowLeft size={16} className="relative z-10" />
+                      <span className="relative z-10">{t.backToHome}</span>
+                    </button>
+                  </div>
+                )}
+
                 {navData.map((link, idx) => {
                   const isExpanded = !!mobileExpandedCategories[idx];
                   return (
@@ -742,65 +816,7 @@ export const Navbar: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Support Modal */}
-      <AnimatePresence>
-        {showSupportModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center px-6 pointer-events-auto">
-            {/* Click-away overlay with subtle dimmer matching overall theme */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`absolute inset-0 ${themeMode === 'dark' ? 'bg-black/40' : 'bg-black/15'}`} 
-              onClick={() => setShowSupportModal(false)} 
-            />
-            
-            <motion.div 
-              key="support-modal-box"
-              initial={{ opacity: 0, scale: 0.93, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 10 }}
-              transition={{ 
-                type: "spring",
-                stiffness: 420,
-                damping: 32,
-                mass: 0.7
-              }}
-              className={`relative w-full max-w-xl rounded-[2rem] p-8 text-center ${modalStyle}`}
-            >
-               <button 
-                 onClick={() => setShowSupportModal(false)} 
-                 className={`absolute top-4 right-4 p-2 rounded-full transition-colors ${themeMode === 'dark' ? 'bg-white/10 hover:bg-white/20' : 'bg-black/5 hover:bg-black/10'}`}
-               >
-                 <X size={18} />
-               </button>
-               <h3 className={`text-2xl font-bold mb-2`}>{t.supportThanks}</h3>
-               <div className={`bg-white p-2 rounded-xl shadow-inner mb-2 mx-auto w-full ${themeMode === 'dark' ? 'opacity-95' : ''}`}>
-                  <img 
-                    src={qrImage} 
-                    loading="eager" 
-                    decoding="async" 
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      const target = e.currentTarget;
-                      const currentSrc = target.src;
-                      const currentIndex = SUPPORT_QR_SOURCES.findIndex(s => currentSrc.includes(s) || currentSrc === s);
-                      if (currentIndex !== -1 && currentIndex + 1 < SUPPORT_QR_SOURCES.length) {
-                        target.src = SUPPORT_QR_SOURCES[currentIndex + 1];
-                      } else {
-                        target.src = SUPPORT_QR_BASE64;
-                      }
-                    }}
-                    className="w-full h-auto rounded-lg shadow-sm object-contain max-h-[70vh]" 
-                    alt="Support Payment QR Code" 
-                  />
-               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      </nav>
     </>
   );
 };

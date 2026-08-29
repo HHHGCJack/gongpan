@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Github, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../App';
@@ -7,13 +7,14 @@ type ModalType = 'privacy' | 'terms' | 'contact' | null;
 
 export const Footer: React.FC = () => {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
-  const { themeMode, language } = useTheme();
+  const { themeMode, language, openWelcomeModal, openSupportModal } = useTheme();
 
   const isDark = themeMode === 'dark';
 
   const translations = {
     zh: {
       copyright: '© 2026 Designed for Simplicity.',
+      updates: '更新公告 & 介绍',
       privacy: '隐私政策',
       terms: '服务条款',
       contact: '联系我',
@@ -33,6 +34,7 @@ export const Footer: React.FC = () => {
     },
     en: {
       copyright: '© 2026 Designed for Simplicity.',
+      updates: "What's New & Intro",
       privacy: 'Privacy',
       terms: 'Terms',
       contact: 'Contact',
@@ -52,6 +54,7 @@ export const Footer: React.FC = () => {
     },
     ja: {
       copyright: '© 2026 Designed for Simplicity.',
+      updates: '更新情報 & 概要',
       privacy: 'プライバシー',
       terms: '利用規約',
       contact: 'コンタクト',
@@ -71,6 +74,7 @@ export const Footer: React.FC = () => {
     },
     ko: {
       copyright: '© 2026 Designed for Simplicity.',
+      updates: '업데이트 & 안내',
       privacy: '개인정보 보호',
       terms: '서비스 약관',
       contact: '연락처',
@@ -90,6 +94,7 @@ export const Footer: React.FC = () => {
     },
     es: {
       copyright: '© 2026 Designed for Simplicity.',
+      updates: 'Novedades y Resumen',
       privacy: 'Privacidad',
       terms: 'Términos',
       contact: 'Contacto',
@@ -109,6 +114,7 @@ export const Footer: React.FC = () => {
     },
     fr: {
       copyright: '© 2026 Designed for Simplicity.',
+      updates: 'Nouveautés & Aperçu',
       privacy: 'Confidentialité',
       terms: 'Termes',
       contact: 'Contact',
@@ -128,6 +134,7 @@ export const Footer: React.FC = () => {
     },
     de: {
       copyright: '© 2026 Designed for Simplicity.',
+      updates: 'Updates & Übersicht',
       privacy: 'Datenschutz',
       terms: 'Bedingungen',
       contact: 'Kontakt',
@@ -147,6 +154,7 @@ export const Footer: React.FC = () => {
     },
     el: {
       copyright: '© 2026 Designed for Simplicity.',
+      updates: 'Ενημερώσεις & Επισκόπηση',
       privacy: 'Απόρρητο',
       terms: 'Όροι',
       contact: 'Επικοινωνία',
@@ -169,19 +177,43 @@ export const Footer: React.FC = () => {
   const t = (translations as any)[language] || translations.en;
   const closeModal = () => setActiveModal(null);
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (activeModal) {
+      const originalOverflow = document.body.style.overflow;
+      const originalTouchAction = document.body.style.touchAction;
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.touchAction = originalTouchAction;
+      };
+    }
+  }, [activeModal]);
+
   const modalStyle = isDark
-    ? 'bg-black/40 backdrop-blur-[30px] backdrop-saturate-[220%] shadow-[0_50px_100px_rgba(0,0,0,0.5),_inset_0_1px_1px_rgba(255,255,255,0.1),_inset_0_-1px_1px_rgba(0,0,0,0.5)] border border-white/10 text-white'
-    : 'bg-white/10 backdrop-blur-[30px] backdrop-saturate-[220%] shadow-[0_50px_100px_rgba(0,0,0,0.2),_inset_0_1px_1px_rgba(255,255,255,0.8),_inset_0_-1px_1px_rgba(255,255,255,0.1)] border border-white/30 text-gray-900';
+    ? 'liquid-glass liquid-glass-dark text-white shadow-[0_40px_100px_rgba(0,0,0,0.8),inset_0_1.5px_2px_rgba(255,255,255,0.25)]'
+    : 'liquid-glass liquid-glass-light text-gray-900 shadow-[0_40px_100px_rgba(0,0,0,0.12),inset_0_2px_3px_rgba(255,255,255,1)]';
+
+  const itemCardStyle = isDark
+    ? 'liquid-glass-pill-dark text-white/90 hover:bg-white/[0.12] transition-all duration-200'
+    : 'liquid-glass-pill-light text-gray-800 hover:bg-white/80 transition-all duration-200';
 
   return (
     <>
-      <footer className={`w-full py-12 px-6 backdrop-blur-sm ${isDark ? 'bg-black/20 border-t border-white/10' : 'bg-white/50 border-t border-gray-200/50'}`}>
+      <footer className={`w-full py-12 px-6 liquid-glass ${isDark ? 'bg-black/25 border-t border-white/10 shadow-[0_-4px_30px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)]' : 'bg-white/35 border-t border-white/60 shadow-[0_-4px_30px_rgba(0,0,0,0.02),inset_0_1px_1.5px_rgba(255,255,255,0.8)]'}`}>
         <div className="max-w-7xl mx-auto flex flex-col items-center justify-center space-y-4">
           <div className={`text-xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>Pan Studio</div>
           <p className={`text-[10px] tracking-[0.2em] uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
             {t.copyright}
           </p>
-          <div className="flex space-x-8 mt-2">
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 mt-2">
+            <button onClick={() => openWelcomeModal && openWelcomeModal('intro')} className={`text-xs font-medium transition-colors flex items-center space-x-1 ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}>
+              <span>{t.updates}</span>
+            </button>
+            <button onClick={() => openSupportModal && openSupportModal()} className={`text-xs font-medium transition-colors flex items-center space-x-1 ${isDark ? 'text-rose-400 hover:text-rose-300' : 'text-rose-600 hover:text-rose-700'}`}>
+              <span>💖 {language === 'zh' ? '支持我' : language === 'en' ? 'Support' : '応援'}</span>
+            </button>
             <button onClick={() => setActiveModal('privacy')} className={`text-xs font-medium transition-colors ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}>{t.privacy}</button>
             <button onClick={() => setActiveModal('terms')} className={`text-xs font-medium transition-colors ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}>{t.terms}</button>
             <button onClick={() => setActiveModal('contact')} className={`text-xs font-medium transition-colors ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}>{t.contact}</button>
@@ -193,31 +225,45 @@ export const Footer: React.FC = () => {
       {/* Shared Modal Overlay */}
       <AnimatePresence>
         {activeModal && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center px-6 pointer-events-auto">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 md:p-8 pointer-events-auto overscroll-none">
             {/* Click-away overlay without full screen blur or darkening */}
-            <div 
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               className="absolute inset-0 bg-transparent" 
               onClick={closeModal} 
             />
             
             <motion.div 
               key="footer-modal-card"
-              initial={{ opacity: 0, scale: 0.93, y: 16 }}
+              initial={{ opacity: 0, scale: 0.94, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.94, y: 10 }}
               transition={{ 
                 type: "spring",
-                stiffness: 420,
+                stiffness: 400,
                 damping: 32,
-                mass: 0.7
+                mass: 0.75
               }}
-              className={`relative w-full max-w-md rounded-[2.5rem] p-8 md:p-10 ${modalStyle}`}
+              className={`relative w-full max-w-lg rounded-[2.2rem] sm:rounded-[2.5rem] p-6 sm:p-8 md:p-9 overflow-hidden isolate transform-gpu [transform:translateZ(0)] ${modalStyle}`}
+              role="dialog"
+              aria-modal="true"
             >
+              {/* Specular lighting gradient highlight */}
+              <div className={`absolute top-0 left-0 right-0 h-40 pointer-events-none bg-gradient-to-b ${isDark ? 'from-white/[0.16] via-white/[0.03]' : 'from-white/40 via-white/10'} to-transparent`} />
+
               <button 
                 onClick={closeModal} 
-                className={`absolute top-6 right-6 p-2 rounded-full transition-colors ${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-black/5 hover:bg-black/10'}`}
+                className={`absolute top-5 right-5 sm:top-6 sm:right-6 p-2 sm:p-2.5 rounded-full transition-all duration-200 active:scale-95 z-20 ${
+                  isDark 
+                    ? 'bg-white/10 hover:bg-white/20 text-white/80 hover:text-white border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]' 
+                    : 'bg-white/60 hover:bg-white/90 text-gray-700 hover:text-gray-950 border border-white/80 shadow-[0_2px_8px_rgba(0,0,0,0.05),inset_0_1px_1.5px_rgba(255,255,255,0.9)]'
+                }`}
+                aria-label="Close"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
 
               <AnimatePresence mode="wait">
@@ -227,30 +273,39 @@ export const Footer: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.18, ease: "easeOut" }}
+                  className="relative z-10"
                 >
                   {activeModal === 'contact' && (
                     <div className="text-center">
-                      <h3 className="text-2xl font-bold mb-2">{t.contact}</h3>
-                      <p className={`text-sm mb-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.contactDesc}</p>
+                      <h3 className="text-xl sm:text-2xl font-bold tracking-tight mb-2">{t.contact}</h3>
+                      <p className={`text-xs sm:text-sm mb-6 max-w-sm mx-auto leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t.contactDesc}</p>
                       
-                      <div className="space-y-4">
-                        <a href="mailto:3387287031@qq.com" className={`flex items-center p-4 rounded-2xl transition-colors border shadow-sm group ${isDark ? 'bg-white/5 hover:bg-white/10 border-white/10' : 'bg-white/50 hover:bg-white/80 border-white/40'}`}>
-                          <div className={`p-3 rounded-full mr-4 group-hover:scale-110 transition-transform ${isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
-                            <Mail size={20} />
+                      <div className="space-y-3">
+                        <a 
+                          href="mailto:3387287031@qq.com" 
+                          className={`flex items-center p-3.5 sm:p-4 rounded-2xl group ${itemCardStyle}`}
+                        >
+                          <div className={`p-2.5 sm:p-3 rounded-xl mr-3.5 group-hover:scale-105 transition-transform ${isDark ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-blue-50 text-blue-600 border border-blue-200'}`}>
+                            <Mail size={18} />
                           </div>
                           <div className="text-left overflow-hidden">
-                            <div className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Email</div>
-                            <div className="font-medium truncate">3387287031@qq.com</div>
+                            <div className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Email</div>
+                            <div className="text-sm font-semibold truncate">3387287031@qq.com</div>
                           </div>
                         </a>
 
-                        <a href="https://github.com/gongpan" className={`flex items-center p-4 rounded-2xl transition-colors border shadow-sm group ${isDark ? 'bg-white/5 hover:bg-white/10 border-white/10' : 'bg-white/50 hover:bg-white/80 border-white/40'}`}>
-                          <div className={`p-3 rounded-full mr-4 group-hover:scale-110 transition-transform ${isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-900'}`}>
-                            <Github size={20} />
+                        <a 
+                          href="https://github.com/gongpan" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className={`flex items-center p-3.5 sm:p-4 rounded-2xl group ${itemCardStyle}`}
+                        >
+                          <div className={`p-2.5 sm:p-3 rounded-xl mr-3.5 group-hover:scale-105 transition-transform ${isDark ? 'bg-white/10 text-white border border-white/20' : 'bg-gray-100 text-gray-900 border border-gray-200'}`}>
+                            <Github size={18} />
                           </div>
                           <div className="text-left">
-                            <div className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>GitHub</div>
-                            <div className="font-medium">@gongpan</div>
+                            <div className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>GitHub</div>
+                            <div className="text-sm font-semibold">@gongpan</div>
                           </div>
                         </a>
                       </div>
@@ -259,8 +314,8 @@ export const Footer: React.FC = () => {
 
                   {activeModal === 'privacy' && (
                     <div>
-                      <h3 className="text-2xl font-bold mb-6">{t.privacy}</h3>
-                      <div className={`text-sm space-y-4 leading-relaxed h-[300px] overflow-y-auto pr-2 scrollbar-hide flex flex-col ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                      <h3 className="text-xl sm:text-2xl font-bold tracking-tight mb-4">{t.privacy}</h3>
+                      <div className={`p-4 sm:p-5 rounded-2xl max-h-[340px] overflow-y-auto overscroll-contain pr-3 scrollbar-hide text-xs sm:text-sm space-y-3.5 leading-relaxed ${itemCardStyle}`}>
                         {t.privacyContent.map((p, i) => <p key={i}>{p}</p>)}
                       </div>
                     </div>
@@ -268,8 +323,8 @@ export const Footer: React.FC = () => {
 
                   {activeModal === 'terms' && (
                     <div>
-                      <h3 className="text-2xl font-bold mb-6">{t.terms}</h3>
-                      <div className={`text-sm space-y-4 leading-relaxed h-[300px] overflow-y-auto pr-2 scrollbar-hide flex flex-col ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                      <h3 className="text-xl sm:text-2xl font-bold tracking-tight mb-4">{t.terms}</h3>
+                      <div className={`p-4 sm:p-5 rounded-2xl max-h-[340px] overflow-y-auto overscroll-contain pr-3 scrollbar-hide text-xs sm:text-sm space-y-3.5 leading-relaxed ${itemCardStyle}`}>
                         {t.termsContent.map((p, i) => <p key={i}>{p}</p>)}
                       </div>
                     </div>

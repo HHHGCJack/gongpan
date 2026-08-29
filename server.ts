@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import fs from "fs";
 import cors from "cors";
+import compression from "compression";
 
 const app = express();
 const PORT = 3000;
@@ -114,32 +115,28 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
-
-    // Fallback for SPA routing in development
-    app.use(async (req, res, next) => {
-      if (req.originalUrl.startsWith('/api')) {
-        return next();
-      }
-      
-      // Only handle GET requests that accept HTML
-      if (req.method !== 'GET' || !req.headers.accept?.includes('text/html')) {
-        return next();
-      }
-
-      try {
-        const url = req.originalUrl;
-        let template = fs.readFileSync(path.resolve('index.html'), 'utf-8');
-        template = await vite.transformIndexHtml(url, template);
-        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
-      } catch (e) {
-        vite.ssrFixStacktrace(e as Error);
-        next(e);
-      }
-    });
   } else {
-    app.use(express.static("dist"));
+    // Enable Gzip/deflate compression for production static files
+    app.use(compression({
+      level: 6,
+      threshold: 1024
+    }));
+
+    const distPath = path.join(process.cwd(), "dist");
+    // Serve static hashed assets with 1 year cache
+    app.use(express.static(distPath, {
+      maxAge: '1y',
+      immutable: true,
+      setHeaders: (res, filePath) => {
+        // HTML entry files should always be revalidated
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+        }
+      }
+    }));
     app.use((req, res) => {
-      res.sendFile(path.resolve("dist/index.html"));
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+      res.sendFile(path.join(distPath, "index.html"));
     });
   }
 

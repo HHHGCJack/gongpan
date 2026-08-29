@@ -1,11 +1,10 @@
 import React from 'react';
 import { Hero } from './Hero';
 import { Card } from './Card';
-import { motion } from 'motion/react';
 import { useTheme } from '../App';
 
 export const Home: React.FC = () => {
-  const { handleCardToast, pansouEnabled, showToast, language } = useTheme();
+  const { language } = useTheme();
 
   const translations = {
     zh: {
@@ -56,7 +55,7 @@ export const Home: React.FC = () => {
     },
     ja: {
       pansou: { title: "クラウド検索", desc: "情報のサイロを打破するネットワークリソースの集約", tag: "HOT TOOL" },
-      readingPro: { title: "ジャーナル精読", desc: "The Economistなどのトップ出版物の深い解釈", tag: "PREMIUM" },
+      readingPro: { title: "ジャーナル精读", desc: "The Economistなどのトップ出版物の深い解釈", tag: "PREMIUM" },
       ai: { title: "AI投資エージェント", desc: "AI主導のスマート投資分析および資産意思決定アシスタント", tag: "AI PRO" },
       chat: { title: "インスタントメッセージ", desc: "中国版Telegram。安全で高速なアプリ", tag: "BETA" },
       pansouDisabled: 'ポリシーによりサービス一時停止'
@@ -107,77 +106,63 @@ export const Home: React.FC = () => {
       <section id="content-section" className="max-w-7xl mx-auto px-6 pt-6 md:pt-10 pb-32 relative z-10 scroll-mt-16 md:scroll-mt-20">
         
         {/* Bento Grid Layout - Responsive: 1 col mobile, 2 col tablet, 3 col desktop */}
-        <motion.div 
-          initial="hidden"
-          animate="show"
-          variants={{
-            hidden: { opacity: 0 },
-            show: {
-              opacity: 1,
-              transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.2
-              }
-            }
-          }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           
-          {/* 1. Pansou - Wide Card - New Premium "Liquid Oil" Abstract */}
-          <motion.div variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } } }} className="md:col-span-2">
+          {/* 1. Pansou - Wide Card */}
+          <div id="section-entertainment" className="md:col-span-2 scroll-mt-24">
             <Card
               title={t.pansou.title}
               description={t.pansou.desc}
               imageUrl="https://wsrv.nl/?url=images.unsplash.com/photo-1618005182384-a83a8bd57fbe&w=800&q=50&output=webp"
-              href={pansouEnabled ? "http://gongcheng.yyboxdns.com:12309" : "#"}
-              onToast={() => !pansouEnabled ? showToast(t.pansouDisabled) : undefined}
+              href="/showcase/pansou"
               tag={t.pansou.tag}
               size="wide"
               theme="light"
             />
-          </motion.div>
+          </div>
 
-          {/* 2. Foreign Journal - Tall Card - Stable Journal/Coffee */}
-          <motion.div variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } } }}>
+          {/* 2. Foreign Journal - Tall Card */}
+          <div id="section-learn" className="scroll-mt-24">
             <Card
               title={t.readingPro.title}
               description={t.readingPro.desc}
               imageUrl="https://wsrv.nl/?url=images.unsplash.com/photo-1550592704-6c76defa9985&w=500&q=50&output=webp"
-              href="/reading-pro"
+              href="/showcase/reading-pro"
               tag={t.readingPro.tag}
               size="normal"
               theme="light"
             />
-          </motion.div>
+          </div>
 
-          {/* 3. AI Investment Agent - Dark Theme Card - Financial Investment & Market Analytics */}
-          <motion.div variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } } }}>
+          {/* 3. AI Investment Agent */}
+          <div id="section-tech" className="scroll-mt-24">
             <Card
               title={t.ai.title}
               description={t.ai.desc}
               imageUrl="https://wsrv.nl/?url=images.unsplash.com/photo-1611974789855-9c2a0a7236a3&w=800&q=60&output=webp"
-              href="https://cash.gongpan.org"
+              href="/showcase/ai-agent"
               tag={t.ai.tag}
               size="normal"
               theme="dark"
             />
-          </motion.div>
+          </div>
 
-            {/* 4. Instant Chat - Light Card */}
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } } }} className="md:col-span-2">
+          {/* 4. Instant Chat - Light Card */}
+          <div id="section-chat" className="md:col-span-2 scroll-mt-24">
             <Card
               title={t.chat.title}
               description={t.chat.desc}
               imageUrl="https://wsrv.nl/?url=images.unsplash.com/photo-1611746872915-64382b5c76da&w=800&q=50&output=webp"
-              href="http://gongcheng.yyboxdns.com:21312/"
+              href="/showcase/chat"
               tag={t.chat.tag}
               size="wide"
               theme="light"
             />
-          </motion.div>
+          </div>
 
-        </motion.div>
+        </div>
       </section>
     </main>
   );
 };
+

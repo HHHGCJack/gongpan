@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
 import { useTheme } from '../App';
+import { scrollToElementSmoothly } from '../src/utils/smoothScroll';
 
 const words = [
   { text: '你好', lang: 'cn' },
@@ -35,117 +36,56 @@ export const Hero: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % words.length);
-    }, 2500);
+    }, 2800);
     return () => clearInterval(interval);
   }, []);
 
-  const animRef = React.useRef<number | null>(null);
-
-  const smoothScrollTo = (targetY: number, duration: number = 650) => {
-    if (animRef.current !== null) {
-      cancelAnimationFrame(animRef.current);
-      animRef.current = null;
-    }
-
-    const startY = window.pageYOffset || document.documentElement.scrollTop;
-    const diff = targetY - startY;
-    if (Math.abs(diff) < 2) return;
-
-    // Temporarily set scrollBehavior to auto during JS frame interpolation
-    const html = document.documentElement;
-    const prevScrollBehavior = html.style.scrollBehavior;
-    html.style.scrollBehavior = 'auto';
-
-    const startTime = performance.now();
-
-    // Symmetrical Sine Ease-in-out: peak velocity is exactly in the center with 0 mid-point deceleration
-    const easeInOutSine = (x: number): number => {
-      return -(Math.cos(Math.PI * x) - 1) / 2;
-    };
-
-    const step = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const ease = easeInOutSine(progress);
-
-      window.scrollTo(0, startY + diff * ease);
-
-      if (progress < 1) {
-        animRef.current = requestAnimationFrame(step);
-      } else {
-        animRef.current = null;
-        html.style.scrollBehavior = prevScrollBehavior;
-      }
-    };
-
-    animRef.current = requestAnimationFrame(step);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (animRef.current !== null) {
-        cancelAnimationFrame(animRef.current);
-      }
-    };
-  }, []);
-
   const scrollToContent = () => {
-    const section = document.getElementById('content-section');
-    if (section) {
-      const navbar = document.querySelector('nav');
-      const navHeight = navbar ? navbar.offsetHeight : 56;
-      const elementPosition = section.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - navHeight + 8;
-      smoothScrollTo(Math.max(0, offsetPosition), 750);
-    } else {
-      smoothScrollTo(Math.max(0, window.innerHeight - 56), 750);
-    }
+    scrollToElementSmoothly('content-section');
   };
 
   return (
-    <motion.section 
+    <section 
       id="hero-cover"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1 }}
       className={`relative w-full h-[100svh] min-h-[100svh] max-h-[100svh] flex items-center justify-center overflow-hidden transition-colors duration-500 select-none pt-14 md:pt-16`}
     >
       {/* Main Center Brand Cover - Optically Balanced Midpoint */}
       <div className="flex flex-col items-center justify-center w-full px-4 text-center -translate-y-3 sm:-translate-y-4 md:-translate-y-6">
         <div className="relative h-24 sm:h-32 md:h-44 w-full flex justify-center items-center">
-          {words.map((word, index) => (
-            <span
-              key={index}
-              className={`absolute transition-all duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
-                index === activeIndex
-                  ? 'opacity-100 transform translate-y-0 scale-100 blur-0 pointer-events-auto'
-                  : 'opacity-0 transform translate-y-6 scale-90 blur-sm pointer-events-none'
-              } ${themeMode === 'dark' ? 'text-white drop-shadow-[0_2px_20px_rgba(255,255,255,0.25)]' : 'text-gray-900 drop-shadow-md'}`}
-              style={{
-                fontFamily: '"SF Pro Rounded", "Arial Rounded MT Bold", "Nunito", "Varela Round", sans-serif',
-                fontWeight: 900,
-                fontSize: ['cn', 'jp', 'kr'].includes(word.lang) 
-                  ? 'clamp(2.7rem, 13vw, 7.5rem)' 
-                  : 'clamp(3.1rem, 15vw, 9rem)',
-                lineHeight: 1.1,
-                letterSpacing: '-0.02em'
-              }}
-            >
-              {word.text}
-            </span>
-          ))}
+          {words.map((word, index) => {
+            const isActive = index === activeIndex;
+            return (
+              <span
+                key={index}
+                className={`absolute transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+                  isActive
+                    ? 'opacity-100 transform translate-y-0 scale-100 pointer-events-auto'
+                    : 'opacity-0 transform translate-y-4 scale-95 pointer-events-none'
+                } ${themeMode === 'dark' ? 'text-white drop-shadow-[0_2px_20px_rgba(255,255,255,0.25)]' : 'text-gray-900 drop-shadow-sm'}`}
+                style={{
+                  fontFamily: '"SF Pro Rounded", "Arial Rounded MT Bold", "Nunito", "Varela Round", sans-serif',
+                  fontWeight: 900,
+                  fontSize: ['cn', 'jp', 'kr'].includes(word.lang) 
+                    ? 'clamp(2.7rem, 13vw, 7.5rem)' 
+                    : 'clamp(3.1rem, 15vw, 9rem)',
+                  lineHeight: 1.1,
+                  letterSpacing: '-0.02em',
+                  willChange: isActive ? 'transform, opacity' : 'auto'
+                }}
+              >
+                {word.text}
+              </span>
+            );
+          })}
         </div>
 
-        <motion.p 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 0.85, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
+        <p 
           className={`mt-2 sm:mt-4 md:mt-5 text-[11px] sm:text-xs md:text-sm font-semibold tracking-[0.3em] sm:tracking-[0.4em] uppercase ${
             themeMode === 'dark' ? 'text-gray-400' : 'text-gray-500'
           }`}
         >
           {t.slogan}
-        </motion.p>
+        </p>
       </div>
 
       {/* Floating Bottom Scroll Prompt Indicator - Positioned naturally near bottom edge */}
@@ -153,13 +93,15 @@ export const Hero: React.FC = () => {
         <motion.button
           onClick={scrollToContent}
           initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 0.9, 0.4] }}
+          animate={{ opacity: [0.6, 1, 0.6] }}
           transition={{ 
             opacity: { repeat: Infinity, duration: 2.5, ease: "easeInOut" },
             delay: 0.8
           }}
-          className={`flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-full transition-transform hover:scale-110 active:scale-95 focus:outline-none cursor-pointer ${
-            themeMode === 'dark' ? 'text-white/60 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+          className={`flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 focus:outline-none cursor-pointer liquid-glass ${
+            themeMode === 'dark' 
+              ? 'liquid-glass-pill-dark text-white/80 hover:text-white' 
+              : 'liquid-glass-pill-light text-gray-700 hover:text-black'
           }`}
           aria-label="Scroll down to explore"
         >
@@ -167,10 +109,10 @@ export const Hero: React.FC = () => {
             animate={{ y: [0, 4, 0] }}
             transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
           >
-            <ChevronDown size={21} strokeWidth={2.2} />
+            <ChevronDown size={20} strokeWidth={2.5} />
           </motion.div>
         </motion.button>
       </div>
-    </motion.section>
+    </section>
   );
 };

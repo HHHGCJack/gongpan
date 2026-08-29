@@ -37,4 +37,6 @@ export interface ThemeContextType {
   handleCardToast: () => void;
   pansouEnabled: boolean;
   setPansouEnabled: (enabled: boolean) => void;
+  openWelcomeModal?: (tab?: 'intro' | 'support') => void;
+  openSupportModal?: () => void;
 }
