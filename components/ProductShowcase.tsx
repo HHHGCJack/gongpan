@@ -71,6 +71,7 @@ import {
   AIAgentTerminal, 
   GongPanChatMessenger 
 } from './ProductWorkstations';
+import { BetaApplyModal } from './BetaApplyModal';
 
 // Normalized category matcher
 const normalizeCategoryId = (rawId: string | undefined): string => {
@@ -317,6 +318,41 @@ const COMPARISON_MAP: Record<string, Record<string, Array<{ dimension: string; t
   },
 };
 
+const CHAT_TESTING_NOTICE: Record<string, { badge: string; text: string }> = {
+  zh: {
+    badge: '内测状态说明',
+    text: '本功能仍处于测试状态，仅受邀请用户可以注册账号'
+  },
+  en: {
+    badge: 'BETA TESTING NOTICE',
+    text: 'This feature is currently in testing; only invited users can register an account.'
+  },
+  ja: {
+    badge: 'ベータテストのご案内',
+    text: '本機能は現在テスト段階です。招待されたユーザーのみアカウントを登録できます。'
+  },
+  ko: {
+    badge: '테스트 단계 안내',
+    text: '본 기능은 현재 테스트 중이며, 초대받은 사용자만 계정을 등록할 수 있습니다.'
+  },
+  es: {
+    badge: 'AVISO DE PRUEBA',
+    text: 'Esta función está en fase de prueba; solo los usuarios invitados pueden registrarse.'
+  },
+  fr: {
+    badge: 'AVIS DE PHASE BÊTA',
+    text: 'Cette fonctionnalité est en phase de test ; seuls les utilisateurs invités peuvent créer un compte.'
+  },
+  de: {
+    badge: 'BETA-HINWEIS',
+    text: 'Diese Funktion befindet sich in der Testphase; nur eingeladene Benutzer können ein Konto registrieren.'
+  },
+  el: {
+    badge: 'ΕΙΔΟΠΟΙΗΣΗ ΔΟΚΙΜΗΣ',
+    text: 'Αυτή η λειτουργία είναι σε δοκιμαστική φάση. Μόνο προσκεκλημένοι χρήστες μπορούν να εγγραφούν.'
+  }
+};
+
 export const ProductShowcase: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -338,6 +374,7 @@ export const ProductShowcase: React.FC = () => {
   const [imgLoaded, setImgLoaded] = useState(true);
   const [heroImgSrc, setHeroImgSrc] = useState(targetHeroImg);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+  const [betaApplyModalOpen, setBetaApplyModalOpen] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
@@ -402,7 +439,14 @@ export const ProductShowcase: React.FC = () => {
     }
 
     if (product.isExternal) {
-      window.open(product.targetUrl, '_blank', 'noopener,noreferrer');
+      try {
+        const win = window.open(product.targetUrl, '_blank', 'noopener,noreferrer');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+          window.location.href = product.targetUrl;
+        }
+      } catch {
+        window.location.href = product.targetUrl;
+      }
     } else {
       navigate(product.targetUrl);
     }
@@ -649,6 +693,39 @@ export const ProductShowcase: React.FC = () => {
             <span>{product.tag}</span>
           </div>
 
+          {/* If Chat Showcase: Render clear invitation & testing status banner right at the beginning */}
+          {categoryId === 'chat' && (
+            <div className={`w-full max-w-3xl mx-auto px-4 sm:px-6 py-3 sm:py-3.5 rounded-2xl sm:rounded-full border flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg transition-all ${
+              isDark 
+                ? 'bg-sky-950/50 border-sky-400/40 text-sky-200 shadow-[0_4px_24px_rgba(14,165,233,0.18)]' 
+                : 'bg-sky-50/95 border-sky-300 text-sky-950 shadow-[0_4px_24px_rgba(14,165,233,0.12)]'
+            }`}>
+              <div className="flex items-center space-x-2.5">
+                <div className="flex h-2.5 w-2.5 relative shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] sm:text-[11px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-400 border border-sky-400/30 shrink-0">
+                    {(CHAT_TESTING_NOTICE[language] || CHAT_TESTING_NOTICE.zh).badge}
+                  </span>
+                  <p className="text-xs sm:text-sm font-bold tracking-tight">
+                    {(CHAT_TESTING_NOTICE[language] || CHAT_TESTING_NOTICE.zh).text}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setBetaApplyModalOpen(true)}
+                className="px-3.5 py-1.5 rounded-full bg-sky-500 hover:bg-sky-400 active:scale-95 text-white font-bold text-xs shrink-0 flex items-center space-x-1.5 shadow-md shadow-sky-500/25 transition-all cursor-pointer"
+              >
+                <Sparkles size={13} className="text-amber-300" />
+                <span>{language === 'zh' ? '申请内测资格' : 'Apply for Beta'}</span>
+                <ArrowRight size={13} />
+              </button>
+            </div>
+          )}
+
           <h1 className="w-full text-center text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.12] max-w-4xl mx-auto px-2">
             {product.heroHeadline}
           </h1>
@@ -660,28 +737,53 @@ export const ProductShowcase: React.FC = () => {
           </p>
 
           <div className="flex flex-col items-center justify-center pt-2 sm:pt-3 w-full mx-auto">
-            <button
-              onClick={() => handleVisit()}
-              className={`group relative px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-sm sm:text-base flex items-center justify-center space-x-2.5 transition-all duration-300 active:scale-95 shadow-2xl cursor-pointer overflow-hidden border liquid-glass mx-auto ${
-                isDark 
-                  ? 'liquid-glass-pill-dark text-white hover:text-white border-white/30 shadow-[0_12px_40px_rgba(0,0,0,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.4)] hover:border-white/60 hover:shadow-[0_16px_50px_rgba(255,255,255,0.15)]' 
-                  : 'liquid-glass-pill-light text-gray-900 hover:text-black border-white/90 shadow-[0_12px_40px_rgba(0,0,0,0.08),inset_0_1.5px_2px_rgba(255,255,255,1)] hover:border-white hover:shadow-[0_16px_50px_rgba(0,0,0,0.14)]'
-              }`}
-            >
-              {/* Specular fluid light reflection on top half of the glass button */}
-              <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none bg-gradient-to-b from-white/40 dark:from-white/20 to-transparent" />
-              
-              {/* Subtle ambient accent color glow on hover */}
-              <div 
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-full"
-                style={{
-                  background: `radial-gradient(circle at center, ${product.accentColor}25 0%, transparent 70%)`
-                }}
-              />
+            <div className="flex flex-wrap items-center justify-center gap-3.5">
+              <button
+                onClick={() => handleVisit()}
+                className={`group relative px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-sm sm:text-base flex items-center justify-center space-x-2.5 transition-all duration-300 active:scale-95 shadow-2xl cursor-pointer overflow-hidden border liquid-glass ${
+                  isDark 
+                    ? 'liquid-glass-pill-dark text-white hover:text-white border-white/30 shadow-[0_12px_40px_rgba(0,0,0,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.4)] hover:border-white/60 hover:shadow-[0_16px_50px_rgba(255,255,255,0.15)]' 
+                    : 'liquid-glass-pill-light text-gray-900 hover:text-black border-white/90 shadow-[0_12px_40px_rgba(0,0,0,0.08),inset_0_1.5px_2px_rgba(255,255,255,1)] hover:border-white hover:shadow-[0_16px_50px_rgba(0,0,0,0.14)]'
+                }`}
+              >
+                {/* Specular fluid light reflection on top half of the glass button */}
+                <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none bg-gradient-to-b from-white/40 dark:from-white/20 to-transparent" />
+                
+                {/* Subtle ambient accent color glow on hover */}
+                <div 
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-full"
+                  style={{
+                    background: `radial-gradient(circle at center, ${product.accentColor}25 0%, transparent 70%)`
+                  }}
+                />
 
-              <span className="relative z-10 font-bold tracking-wide">{product.ctaText || pageUiT.explore}</span>
-              <ArrowUpRight size={17} className="relative z-10 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </button>
+                <span className="relative z-10 font-bold tracking-wide">{product.ctaText || pageUiT.explore}</span>
+                <ArrowUpRight size={17} className="relative z-10 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </button>
+
+              {categoryId === 'chat' && (
+                <button
+                  onClick={() => setBetaApplyModalOpen(true)}
+                  className={`group relative px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold text-sm sm:text-base flex items-center justify-center space-x-2.5 transition-all duration-300 active:scale-95 shadow-xl cursor-pointer overflow-hidden border ${
+                    isDark
+                      ? 'bg-sky-500/20 hover:bg-sky-500/30 text-sky-200 border-sky-400/40 hover:border-sky-300 shadow-[0_4px_24px_rgba(14,165,233,0.2)]'
+                      : 'bg-sky-500 hover:bg-sky-600 text-white border-transparent shadow-lg shadow-sky-500/25'
+                  }`}
+                >
+                  <Sparkles size={16} className="text-amber-300 animate-pulse" />
+                  <span className="relative z-10 tracking-wide">{language === 'zh' ? '联系申请内测资格' : 'Apply for Beta Access'}</span>
+                  <ArrowRight size={15} className="relative z-10 transition-transform duration-300 group-hover:translate-x-1" />
+                </button>
+              )}
+            </div>
+
+            {categoryId === 'chat' && (
+              <p className={`text-[11px] sm:text-xs font-medium mt-3.5 flex items-center justify-center space-x-1.5 ${
+                isDark ? 'text-sky-300/80' : 'text-sky-800/80'
+              }`}>
+                <span>* {(CHAT_TESTING_NOTICE[language] || CHAT_TESTING_NOTICE.zh).text}</span>
+              </p>
+            )}
           </div>
         </motion.div>
       </section>
@@ -1571,7 +1673,13 @@ export const ProductShowcase: React.FC = () => {
             <AIAgentTerminal product={product} isDark={isDark} language={language} onVisit={handleVisit} />
           )}
           {categoryId === 'chat' && (
-            <GongPanChatMessenger product={product} isDark={isDark} language={language} onVisit={handleVisit} />
+            <GongPanChatMessenger 
+              product={product} 
+              isDark={isDark} 
+              language={language} 
+              onVisit={handleVisit}
+              onApplyBeta={() => setBetaApplyModalOpen(true)}
+            />
           )}
         </motion.div>
 
@@ -1714,24 +1822,49 @@ export const ProductShowcase: React.FC = () => {
               {product.heroSubheadline}
             </p>
             <div className="pt-3 flex flex-col items-center justify-center">
-              <button
-                onClick={() => handleVisit()}
-                className={`group relative px-10 sm:px-12 py-4 rounded-full font-bold text-sm sm:text-base flex items-center justify-center space-x-2.5 mx-auto transition-all duration-300 active:scale-95 shadow-2xl cursor-pointer overflow-hidden border liquid-glass ${
-                  isDark 
-                    ? 'liquid-glass-pill-dark text-white hover:text-white border-white/30 shadow-[0_12px_40px_rgba(0,0,0,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.4)] hover:border-white/60 hover:shadow-[0_16px_50px_rgba(255,255,255,0.15)]' 
-                    : 'liquid-glass-pill-light text-gray-900 hover:text-black border-white/90 shadow-[0_12px_40px_rgba(0,0,0,0.08),inset_0_1.5px_2px_rgba(255,255,255,1)] hover:border-white hover:shadow-[0_16px_50px_rgba(0,0,0,0.14)]'
-                }`}
-              >
-                <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none bg-gradient-to-b from-white/40 dark:from-white/20 to-transparent" />
-                <div 
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-full"
-                  style={{
-                    background: `radial-gradient(circle at center, ${product.accentColor}25 0%, transparent 70%)`
-                  }}
-                />
-                <span className="relative z-10 font-bold tracking-wide">{product.ctaText || pageUiT.launchNow}</span>
-                <ArrowUpRight size={17} className="relative z-10 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </button>
+              <div className="flex flex-wrap items-center justify-center gap-3.5">
+                <button
+                  onClick={() => handleVisit()}
+                  className={`group relative px-8 sm:px-12 py-4 rounded-full font-bold text-sm sm:text-base flex items-center justify-center space-x-2.5 mx-auto transition-all duration-300 active:scale-95 shadow-2xl cursor-pointer overflow-hidden border liquid-glass ${
+                    isDark 
+                      ? 'liquid-glass-pill-dark text-white hover:text-white border-white/30 shadow-[0_12px_40px_rgba(0,0,0,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.4)] hover:border-white/60 hover:shadow-[0_16px_50px_rgba(255,255,255,0.15)]' 
+                      : 'liquid-glass-pill-light text-gray-900 hover:text-black border-white/90 shadow-[0_12px_40px_rgba(0,0,0,0.08),inset_0_1.5px_2px_rgba(255,255,255,1)] hover:border-white hover:shadow-[0_16px_50px_rgba(0,0,0,0.14)]'
+                  }`}
+                >
+                  <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none bg-gradient-to-b from-white/40 dark:from-white/20 to-transparent" />
+                  <div 
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-full"
+                    style={{
+                      background: `radial-gradient(circle at center, ${product.accentColor}25 0%, transparent 70%)`
+                    }}
+                  />
+                  <span className="relative z-10 font-bold tracking-wide">{product.ctaText || pageUiT.launchNow}</span>
+                  <ArrowUpRight size={17} className="relative z-10 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </button>
+
+                {categoryId === 'chat' && (
+                  <button
+                    onClick={() => setBetaApplyModalOpen(true)}
+                    className={`group relative px-6 sm:px-8 py-4 rounded-full font-bold text-sm sm:text-base flex items-center justify-center space-x-2.5 transition-all duration-300 active:scale-95 shadow-xl cursor-pointer overflow-hidden border ${
+                      isDark
+                        ? 'bg-sky-500/20 hover:bg-sky-500/30 text-sky-200 border-sky-400/40 hover:border-sky-300 shadow-[0_4px_24px_rgba(14,165,233,0.2)]'
+                        : 'bg-sky-500 hover:bg-sky-600 text-white border-transparent shadow-lg shadow-sky-500/25'
+                    }`}
+                  >
+                    <Sparkles size={16} className="text-amber-300 animate-pulse" />
+                    <span className="relative z-10 tracking-wide">{language === 'zh' ? '联系申请内测资格' : 'Apply for Beta Access'}</span>
+                    <ArrowRight size={15} className="relative z-10 transition-transform duration-300 group-hover:translate-x-1" />
+                  </button>
+                )}
+              </div>
+
+              {categoryId === 'chat' && (
+                <p className={`text-[11px] sm:text-xs font-medium mt-3.5 flex items-center justify-center space-x-1.5 ${
+                  isDark ? 'text-sky-300/80' : 'text-sky-800/80'
+                }`}>
+                  <span>* {(CHAT_TESTING_NOTICE[language] || CHAT_TESTING_NOTICE.zh).text}</span>
+                </p>
+              )}
             </div>
           </div>
         </motion.div>
@@ -1831,6 +1964,12 @@ export const ProductShowcase: React.FC = () => {
         </div>
 
       </section>
+
+      {/* Beta Application Modal */}
+      <BetaApplyModal 
+        isOpen={betaApplyModalOpen} 
+        onClose={() => setBetaApplyModalOpen(false)} 
+      />
 
     </motion.div>
   );

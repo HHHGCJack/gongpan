@@ -27,6 +27,7 @@ interface Props {
   isDark: boolean;
   language: string;
   onVisit: () => void;
+  onApplyBeta?: () => void;
 }
 
 // -------------------------------------------------------------
@@ -687,7 +688,7 @@ export const AIAgentTerminal: React.FC<Props> = ({ product, isDark, language, on
 // -------------------------------------------------------------
 // 4. GONGPAN CHAT: INTERACTIVE E2EE ENCRYPTED MESSENGER TERMINAL
 // -------------------------------------------------------------
-export const GongPanChatMessenger: React.FC<Props> = ({ product, isDark, language, onVisit }) => {
+export const GongPanChatMessenger: React.FC<Props> = ({ product, isDark, language, onVisit, onApplyBeta }) => {
   const t = WORKSTATION_STRINGS.chat;
   const langKey = (language in t.statusSecured ? language : 'zh') as keyof typeof t.statusSecured;
 
@@ -756,6 +757,33 @@ export const GongPanChatMessenger: React.FC<Props> = ({ product, isDark, languag
 
   return (
     <div className="w-full space-y-6">
+      {/* Testing status banner */}
+      <div className={`px-4 py-3 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs font-semibold ${
+        isDark ? 'bg-sky-500/10 border-sky-400/30 text-sky-200' : 'bg-sky-50 border-sky-200 text-sky-900 shadow-sm'
+      }`}>
+        <div className="flex items-center space-x-2">
+          <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse shrink-0" />
+          <span>
+            {language === 'zh' 
+              ? '本功能仍处于测试状态，仅受邀请用户可以注册账号' 
+              : 'This feature is currently in testing; only invited users can register an account.'}
+          </span>
+        </div>
+        {onApplyBeta ? (
+          <button
+            onClick={onApplyBeta}
+            className="px-3 py-1 rounded-full bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold flex items-center space-x-1 transition-all shrink-0 cursor-pointer shadow-sm active:scale-95"
+          >
+            <Sparkles size={12} />
+            <span>{language === 'zh' ? '申请内测' : 'Apply'}</span>
+          </button>
+        ) : (
+          <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 shrink-0">
+            INVITE ONLY
+          </span>
+        )}
+      </div>
+
       {/* Top Security Status */}
       <div className={`p-4 rounded-3xl border flex items-center justify-between flex-wrap gap-3 ${
         isDark ? 'bg-black/50 border-white/15' : 'bg-white/80 border-white/90 shadow-md'
@@ -818,21 +846,37 @@ export const GongPanChatMessenger: React.FC<Props> = ({ product, isDark, languag
           <button
             type="submit"
             disabled={!inputText.trim()}
-            className="p-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 disabled:opacity-40 text-white transition-all shadow-md active:scale-95"
+            className="p-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 disabled:opacity-40 text-white transition-all shadow-md active:scale-95 cursor-pointer"
           >
             <Send size={15} />
           </button>
         </form>
       </div>
 
-      <button
-        onClick={onVisit}
-        className="w-full py-4 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold text-sm flex items-center justify-center space-x-2 shadow-xl shadow-sky-500/25 active:scale-95 transition-transform"
-      >
-        <MessageSquare size={18} />
-        <span>{product.ctaText || (language === 'zh' ? '立即进入 GongPan Chat 私密暢聊' : 'Launch GongPan Chat')}</span>
-        <ArrowUpRight size={16} />
-      </button>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <button
+          onClick={onVisit}
+          className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold text-sm flex items-center justify-center space-x-2 shadow-xl shadow-sky-500/25 active:scale-95 transition-transform cursor-pointer"
+        >
+          <MessageSquare size={18} />
+          <span>{product.ctaText || (language === 'zh' ? '立即进入 GongPan Chat 私密暢聊' : 'Launch GongPan Chat')}</span>
+          <ArrowUpRight size={16} />
+        </button>
+
+        {onApplyBeta && (
+          <button
+            onClick={onApplyBeta}
+            className={`px-6 py-4 rounded-2xl font-bold text-sm flex items-center justify-center space-x-2 border transition-all active:scale-95 cursor-pointer ${
+              isDark
+                ? 'bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border-sky-400/40'
+                : 'bg-sky-100 hover:bg-sky-200 text-sky-900 border-sky-300 shadow-sm'
+            }`}
+          >
+            <Sparkles size={16} className="text-amber-400" />
+            <span>{language === 'zh' ? '联系申请内测资格' : 'Apply for Beta'}</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 };
