@@ -7,6 +7,14 @@
 html {
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Global Safari 3D Touch / Long-Press Preview Suppression for Links & Cards */
+a, img, button, [role="button"], .liquid-glass {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
 }
 
 @layer utilities {

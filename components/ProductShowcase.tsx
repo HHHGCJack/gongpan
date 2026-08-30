@@ -439,14 +439,7 @@ export const ProductShowcase: React.FC = () => {
     }
 
     if (product.isExternal) {
-      try {
-        const win = window.open(product.targetUrl, '_blank', 'noopener,noreferrer');
-        if (!win || win.closed || typeof win.closed === 'undefined') {
-          window.location.href = product.targetUrl;
-        }
-      } catch {
-        window.location.href = product.targetUrl;
-      }
+      window.location.href = product.targetUrl;
     } else {
       navigate(product.targetUrl);
     }
@@ -639,7 +632,7 @@ export const ProductShowcase: React.FC = () => {
         duration: 0.24, 
         ease: [0.16, 1, 0.3, 1] 
       }}
-      className="relative min-h-screen selection:bg-blue-500/30 overflow-x-hidden font-sans pt-14 pb-32 origin-top will-change-[transform,opacity] transform-gpu"
+      className="relative min-h-screen selection:bg-blue-500/30 overflow-x-hidden font-sans pt-14 pb-32"
     >
       
       {/* Top Global Scroll Progress Bar - Flowing Iridescent Stream (流光溢彩) */}

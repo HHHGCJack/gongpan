@@ -49,6 +49,13 @@
         -ms-overflow-style: none; /* IE and Edge */
         overflow-x: hidden; /* Prevent horizontal scroll */
         -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+        -webkit-touch-callout: none !important; /* Disable iOS Safari link peek/preview on long press */
+      }
+      
+      a, img, button, [role="button"] {
+        -webkit-touch-callout: none !important;
+        -webkit-user-select: none !important;
+        user-select: none !important;
       }
       
       html::-webkit-scrollbar, body::-webkit-scrollbar {

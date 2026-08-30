@@ -188,7 +188,31 @@ function App() {
     };
 
     window.addEventListener('languagechange', handleLanguageChange);
-    return () => window.removeEventListener('languagechange', handleLanguageChange);
+
+    // Suppress default long-press context menu / link peek preview in iOS Safari
+    const handleContextMenu = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest('a, button, [role="button"], .group, img')) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener('contextmenu', handleContextMenu, { passive: false });
+
+    // Ensure manual scroll restoration to prevent Safari BFCache gap bugs on return
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+
+    const handlePageShow = () => {
+      window.scrollTo(0, window.scrollY);
+    };
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => {
+      window.removeEventListener('languagechange', handleLanguageChange);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      window.removeEventListener('pageshow', handlePageShow);
+    };
   }, []);
 
   useEffect(() => {
@@ -289,7 +313,7 @@ function App() {
       openWelcomeModal,
       openSupportModal 
     }}>
-      <div className={`min-h-screen flex flex-col font-sans selection:bg-blue-500/30 transition-colors duration-300 relative overflow-hidden ${themeMode === 'dark' ? 'bg-[#09090b] text-white' : 'bg-[#f6f7fa] text-black'}`}>
+      <div className={`min-h-screen flex flex-col font-sans selection:bg-blue-500/30 transition-colors duration-300 relative ${themeMode === 'dark' ? 'bg-[#09090b] text-white' : 'bg-[#f6f7fa] text-black'}`}>
         
         {/* Dynamic Liquid Glass Ambient Light Caustics - GPU Optimized & Low Overhead */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden [contain:strict]">

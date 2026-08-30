@@ -375,8 +375,6 @@ export const BetaApplyModal: React.FC<BetaApplyModalProps> = ({ isOpen, onClose 
             <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-2.5">
               <a
                 href="http://gongcheng.yyboxdns.com:21312/"
-                target="_blank"
-                rel="noopener noreferrer"
                 className={`w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 border transition-all ${
                   isDark
                     ? 'border-white/15 text-gray-300 hover:text-white hover:bg-white/10'

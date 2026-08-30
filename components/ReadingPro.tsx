@@ -218,7 +218,7 @@ export const ReadingPro: React.FC = () => {
         initial={{ opacity: 0, scale: 0.98, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-        className="flex-grow pt-24 pb-32 px-6 max-w-7xl mx-auto w-full relative z-10 origin-top will-change-[transform,opacity] transform-gpu"
+        className="flex-grow pt-20 md:pt-24 pb-32 px-6 max-w-7xl mx-auto w-full relative z-10"
       >
         <div className="flex items-center mb-6">
           <BackButton />

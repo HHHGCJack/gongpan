@@ -158,6 +158,6 @@ export async function resolveBestPansouNode(): Promise<{ node: PansouNode; isFal
  */
 export function openPansouUrl(url: string) {
   if (typeof window !== 'undefined') {
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.location.href = url;
   }
 }

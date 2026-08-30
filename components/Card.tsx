@@ -54,6 +54,7 @@ export const Card: React.FC<ProductCardProps> = ({
       to={href === '#' ? '#' : href} 
       onClick={handleClick}
       onTouchStart={() => {}}
+      onContextMenu={(e) => e.preventDefault()}
       draggable="false"
       className={`group relative isolate overflow-hidden rounded-[2.5rem] 
         transition-transform duration-200 ease-out
@@ -61,7 +62,7 @@ export const Card: React.FC<ProductCardProps> = ({
         ${size === 'wide' ? 'md:col-span-2' : 'col-span-1'}
         ${getGlassClasses()}
         h-[420px] md:h-[500px] flex flex-col cursor-pointer
-        select-none
+        select-none [-webkit-touch-callout:none] [-webkit-user-select:none]
       `}
     >
       {/* Background Media Container */}

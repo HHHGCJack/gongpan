@@ -381,7 +381,7 @@ export const Navbar: React.FC = () => {
       return;
     }
     if (currentShowcase.isExternal) {
-      window.open(currentShowcase.targetUrl, '_blank', 'noopener,noreferrer');
+      window.location.href = currentShowcase.targetUrl;
     } else {
       navigate(currentShowcase.targetUrl);
     }
@@ -415,7 +415,8 @@ export const Navbar: React.FC = () => {
       />
 
       <nav 
-        className="fixed top-0 left-0 right-0 z-50 transition-colors duration-200"
+        className="fixed top-0 left-0 right-0 z-50 transition-colors duration-200 transform-gpu"
+        style={{ transform: 'translate3d(0, 0, 0)', WebkitTransform: 'translate3d(0, 0, 0)' }}
         onMouseLeave={handleNavLeave}
         onMouseEnter={() => {
           if (navTimeoutRef.current) {
