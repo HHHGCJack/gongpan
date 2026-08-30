@@ -415,8 +415,7 @@ export const Navbar: React.FC = () => {
       />
 
       <nav 
-        className="fixed top-0 left-0 right-0 z-50 transition-colors duration-200 transform-gpu"
-        style={{ transform: 'translate3d(0, 0, 0)', WebkitTransform: 'translate3d(0, 0, 0)' }}
+        className="fixed top-0 left-0 right-0 z-50 transition-colors duration-200"
         onMouseLeave={handleNavLeave}
         onMouseEnter={() => {
           if (navTimeoutRef.current) {
@@ -667,6 +666,7 @@ export const Navbar: React.FC = () => {
             ))}
           </div>
         </div>
+      </nav>
 
       {/* Mobile Menu - Full Screen Liquid Glass Drawer */}
       <AnimatePresence>
@@ -817,7 +817,6 @@ export const Navbar: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      </nav>
     </>
   );
 };
