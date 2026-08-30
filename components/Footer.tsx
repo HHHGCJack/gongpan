@@ -315,7 +315,7 @@ export const Footer: React.FC = () => {
                   {activeModal === 'privacy' && (
                     <div>
                       <h3 className="text-xl sm:text-2xl font-bold tracking-tight mb-4">{t.privacy}</h3>
-                      <div className={`p-4 sm:p-5 rounded-2xl max-h-[340px] overflow-y-auto overscroll-contain pr-3 scrollbar-hide text-xs sm:text-sm space-y-3.5 leading-relaxed ${itemCardStyle}`}>
+                      <div className={`max-h-[360px] overflow-y-auto overscroll-contain pr-1 scrollbar-hide text-xs sm:text-sm space-y-3.5 leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                         {t.privacyContent.map((p, i) => <p key={i}>{p}</p>)}
                       </div>
                     </div>
@@ -324,7 +324,7 @@ export const Footer: React.FC = () => {
                   {activeModal === 'terms' && (
                     <div>
                       <h3 className="text-xl sm:text-2xl font-bold tracking-tight mb-4">{t.terms}</h3>
-                      <div className={`p-4 sm:p-5 rounded-2xl max-h-[340px] overflow-y-auto overscroll-contain pr-3 scrollbar-hide text-xs sm:text-sm space-y-3.5 leading-relaxed ${itemCardStyle}`}>
+                      <div className={`max-h-[360px] overflow-y-auto overscroll-contain pr-1 scrollbar-hide text-xs sm:text-sm space-y-3.5 leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                         {t.termsContent.map((p, i) => <p key={i}>{p}</p>)}
                       </div>
                     </div>
