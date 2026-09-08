@@ -4,13 +4,35 @@ import path from "path";
 import fs from "fs";
 import cors from "cors";
 import compression from "compression";
+import { 
+  securityHeaders, 
+  antiBotShield, 
+  rateLimiter, 
+  isSafeExternalUrl, 
+  isValidImageBuffer 
+} from "./server/security";
 
 const app = express();
 const PORT = 3000;
 
+// Security: Disable Express signature header
+app.disable("x-powered-by");
+
+// Trust proxy for accurate client IP resolution behind reverse proxy
+app.set("trust proxy", 1);
+
+// Apply fundamental security headers
+app.use(securityHeaders);
+
+// Anti-bot & automated crawler filter + exploit probe shield
+app.use(antiBotShield);
+
+// Global & API Rate Limiting (Protects from scraping & brute-force)
+app.use(rateLimiter(200, 60000));
+
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
 const QR_STORAGE_FILE = path.join(process.cwd(), "public", "support-qr.jpg");
 
@@ -30,15 +52,26 @@ async function startServer() {
     res.status(404).send("Not found");
   });
 
-  // Upload exact original support QR code
+  // Upload exact original support QR code (With payload and magic byte verification)
   app.post("/api/support-qr", (req, res) => {
     try {
       const { imageBase64 } = req.body;
-      if (!imageBase64) {
-        return res.status(400).json({ error: "Missing imageBase64" });
+      if (!imageBase64 || typeof imageBase64 !== "string") {
+        return res.status(400).json({ error: "Missing or invalid imageBase64 payload" });
       }
+
+      // Security: Check string length sanity (Max ~10MB)
+      if (imageBase64.length > 15 * 1024 * 1024) {
+        return res.status(413).json({ error: "Payload exceeds maximum allowed size" });
+      }
+
       const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
       const buffer = Buffer.from(base64Data, "base64");
+
+      // Security: Verify buffer magic bytes belong to real image data
+      if (!isValidImageBuffer(buffer)) {
+        return res.status(400).json({ error: "Invalid image format: Must be genuine JPEG, PNG or WebP" });
+      }
       
       // Ensure public dir exists
       const publicDir = path.join(process.cwd(), "public");
@@ -72,38 +105,74 @@ async function startServer() {
       res.json({ success: true, url: "/support-qr.jpg?t=" + Date.now() });
     } catch (err: any) {
       console.error("Save QR error:", err);
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: "Internal server error processing QR image" });
     }
   });
 
+  // Proxy PDF with comprehensive SSRF protection, timeout, and size limits
   app.get("/api/proxy-pdf", async (req, res) => {
     let url = req.query.url as string;
-    if (!url) return res.status(400).send("Missing url parameter");
-    
-    // Handle relative URLs by prepending the server's origin
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = `http://127.0.0.1:${PORT}${url.startsWith('/') ? '' : '/'}${url}`;
+    if (!url || typeof url !== "string") {
+      return res.status(400).send("Missing url parameter");
     }
     
+    // Normalize relative URLs to local server origin
+    const isRelative = !url.startsWith("http://") && !url.startsWith("https://");
+    const targetUrl = isRelative 
+      ? `http://127.0.0.1:${PORT}${url.startsWith("/") ? "" : "/"}${url}` 
+      : url;
+
+    // Security: Strict SSRF & Private IP Address Inspection for external targets
+    if (!isRelative) {
+      const safetyCheck = isSafeExternalUrl(targetUrl);
+      if (!safetyCheck.safe) {
+        console.warn(`[SECURITY] Blocked SSRF attempt: ${targetUrl} (${safetyCheck.reason})`);
+        return res.status(403).json({ error: "Forbidden target URL: " + safetyCheck.reason });
+      }
+    }
+    
+    // Abort controller with 12s timeout to prevent Slowloris attacks
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
     try {
-      const response = await fetch(url);
+      const response = await fetch(targetUrl, {
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) GongPan-PDFProxy/1.0"
+        }
+      });
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`);
       }
       
-      const contentType = response.headers.get('content-type');
-      if (contentType && !contentType.includes('pdf') && !contentType.includes('octet-stream')) {
-        const text = await response.text();
-        console.error(`Proxy fetched non-PDF content (${contentType}):`, text.substring(0, 200));
-        return res.status(400).send(`URL did not return a PDF. Content-Type: ${contentType}`);
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("pdf") && !contentType.includes("octet-stream")) {
+        const previewText = await response.text();
+        console.error(`Proxy fetched non-PDF content (${contentType}):`, previewText.substring(0, 150));
+        return res.status(400).send(`Target URL did not return a valid PDF.`);
+      }
+
+      // Security: Check Content-Length to avoid Out-Of-Memory DoS (Max 35MB)
+      const contentLengthHeader = response.headers.get("content-length");
+      if (contentLengthHeader && parseInt(contentLengthHeader, 10) > 35 * 1024 * 1024) {
+        return res.status(413).send("PDF file size exceeds maximum proxy limit (35MB)");
       }
       
       const buffer = await response.arrayBuffer();
+      if (buffer.byteLength > 35 * 1024 * 1024) {
+        return res.status(413).send("PDF file size exceeds maximum proxy limit (35MB)");
+      }
+
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("X-Content-Type-Options", "nosniff");
       res.end(Buffer.from(buffer));
-    } catch (error) {
-      console.error("Proxy PDF error:", error);
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      console.error("Proxy PDF error:", error?.message || error);
       res.status(500).send("Failed to proxy PDF");
     }
   });

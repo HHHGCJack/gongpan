@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
+import { initClientSecurity } from './src/utils/clientSecurity';
+
+// Initialize passive client security and anti-scraping notice
+initClientSecurity();
 
 class ErrorBoundary extends React.Component<any, {hasError: boolean, error: any}> {
   constructor(props: any) {

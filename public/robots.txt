@@ -1,0 +1,33 @@
+# robots.txt for GongPan Portal
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: Baiduspider
+User-agent: YandexBot
+User-agent: DuckDuckBot
+User-agent: Applebot
+User-agent: Sogou web spider
+User-agent: 360Spider
+Disallow: /api/
+Disallow: /admin
+Crawl-delay: 1
+
+# Block aggressive AI scrapers and unauthorized automated harvesters
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: CCBot
+User-agent: ClaudeBot
+User-agent: anthropic-ai
+User-agent: Bytespider
+User-agent: PetalBot
+User-agent: Diffbot
+User-agent: Scrapy
+User-agent: SemrushBot
+User-agent: AhrefsBot
+User-agent: DotBot
+Disallow: /
+
+# General policy for other crawlers
+User-agent: *
+Disallow: /api/
+Disallow: /admin
+Crawl-delay: 2
