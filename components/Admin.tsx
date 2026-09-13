@@ -1,7 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useTheme } from '../App';
-import { Upload, FileText, Image as ImageIcon, Loader2, Lock, Edit2, Save, Trash2, Book, Equal, QrCode, RefreshCw } from 'lucide-react';
+import { 
+  Upload, 
+  FileText, 
+  Image as ImageIcon, 
+  Loader2, 
+  Lock, 
+  Edit2, 
+  Save, 
+  Trash2, 
+  Book, 
+  Equal, 
+  QrCode, 
+  RefreshCw,
+  Search,
+  BookOpen,
+  Cpu,
+  MessageSquare,
+  Sparkles,
+  Layers,
+  Sliders,
+  CheckCircle2,
+  XCircle
+} from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 import { 
   DEFAULT_SUPPORT_QR, 
@@ -163,7 +185,15 @@ const SortableBookItem: React.FC<SortableBookItemProps> = ({
 };
 
 export const Admin: React.FC = () => {
-  const { themeMode, pansouEnabled, setPansouEnabled } = useTheme();
+  const { 
+    themeMode, 
+    pansouEnabled, 
+    setPansouEnabled,
+    welcomeModalEnabled,
+    setWelcomeModalEnabled,
+    productsEnabled,
+    setProductEnabled
+  } = useTheme();
   const isDark = themeMode === 'dark';
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -493,23 +523,35 @@ export const Admin: React.FC = () => {
   const handleTogglePansou = async () => {
     const newValue = !pansouEnabled;
     try {
+      setProductEnabled('pansou', newValue);
+      setPansouEnabled(newValue);
       const { error } = await supabase
         .from('settings')
         .upsert([{ id: 'pansou_enabled', value: newValue }]);
         
       if (error) {
-        throw error;
+        console.warn('Supabase settings warning:', error);
       }
-      setPansouEnabled(newValue);
       setMessage(`网盘影视资源搜功能已${newValue ? '开启' : '关闭'}`);
     } catch (err: any) {
       console.error('Failed to update settings:', err);
-      if (err.message && err.message.includes('relation "public.settings" does not exist')) {
-        setMessage('更新失败: 数据库中未找到 settings 表。请在 Supabase 创建 id(text) 和 value(boolean) 的 settings 表。');
-      } else {
-        setMessage(`更新失败: ${err.message || '未知错误'}`);
-      }
+      setMessage(`网盘影视资源搜已${newValue ? '开启' : '关闭'} (本地已生效)`);
     }
+  };
+
+  const handleToggleWelcomeModal = () => {
+    const nextVal = !welcomeModalEnabled;
+    setWelcomeModalEnabled(nextVal);
+    setMessage(`全站开屏欢迎弹窗已${nextVal ? '开启展示' : '关闭静默'}`);
+  };
+
+  const handleToggleProduct = (key: string, name: string) => {
+    const currentVal = key === 'pansou' 
+      ? pansouEnabled 
+      : (productsEnabled?.[key] ?? true);
+    const nextVal = !currentVal;
+    setProductEnabled(key, nextVal);
+    setMessage(`产品「${name}」已${nextVal ? '开启上架' : '关闭下架'}`);
   };
 
   const getGlassClasses = () => {
@@ -770,33 +812,285 @@ export const Admin: React.FC = () => {
 
             {/* Tab Content: Settings */}
             {activeTab === 'settings' && (
-              <div className="space-y-6">
-                <div className={`p-6 rounded-2xl border flex items-center justify-between ${
+              <div className="space-y-8">
+                
+                {/* 1. Global Interaction & Welcome Modal Toggle */}
+                <div className={`p-6 sm:p-7 rounded-3xl border transition-all ${
                   isDark 
-                    ? 'bg-white/5 border-white/20' 
-                    : 'bg-white/50 border-gray-100'
+                    ? 'bg-white/5 border-white/20 shadow-lg' 
+                    : 'bg-white/80 border-gray-200/80 shadow-md'
                 }`}>
-                  <div>
-                    <h3 className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>网盘影视资源搜功能</h3>
-                    <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      控制前端首页是否允许访问网盘影视搜索模块。关闭后将会提示政策原因暂停服务。
-                    </p>
-                  </div>
-                  
-                  <button
-                    onClick={handleTogglePansou}
-                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${
-                        pansouEnabled 
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-start sm:items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-500 flex items-center justify-center shrink-0 border border-blue-500/20">
+                        <Sparkles className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2.5">
+                          <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            全站开屏欢迎弹窗
+                          </h3>
+                          <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-medium border ${
+                            welcomeModalEnabled 
+                              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                              : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                          }`}>
+                            {welcomeModalEnabled ? '展示中 Online' : '已静默 Muted'}
+                          </span>
+                        </div>
+                        <p className={`text-xs sm:text-sm mt-1 max-w-xl ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          控制用户初次访问网站时是否自动弹出「欢迎与支持」对话框。关闭后新访客将直接浏览首页，不再自动弹窗干扰（用户仍可通过右上角菜单手动打开）。
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      onClick={handleToggleWelcomeModal}
+                      className={`relative inline-flex h-8 w-16 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${
+                        welcomeModalEnabled 
                           ? (isDark ? 'bg-blue-600' : 'bg-green-500')
-                          : (isDark ? 'bg-gray-800' : 'bg-gray-300')
+                          : (isDark ? 'bg-white/10' : 'bg-gray-300')
                       }`}
-                  >
-                    <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                        pansouEnabled ? 'translate-x-8' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
+                    >
+                      <span
+                        className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+                          welcomeModalEnabled ? 'translate-x-9' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. Product Feature Toggles Grid */}
+                <div className={`p-6 sm:p-7 rounded-3xl border transition-all ${
+                  isDark 
+                    ? 'bg-white/5 border-white/20 shadow-lg' 
+                    : 'bg-white/80 border-gray-200/80 shadow-md'
+                }`}>
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-black/5 dark:border-white/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-500 flex items-center justify-center shrink-0 border border-purple-500/20">
+                        <Sliders className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          产品与业务模块上下架控制
+                        </h3>
+                        <p className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          独立控制各产品的开放状态。关闭后保留卡片展示与布局，用户点击时将弹出精美维护升级提示框，保障视觉完整与友好提示。
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    {/* Product 1: Pansou */}
+                    {(() => {
+                      const isPansouActive = Boolean(pansouEnabled && (productsEnabled?.pansou ?? true));
+                      return (
+                        <div className={`p-5 rounded-2xl border transition-all flex items-center justify-between ${
+                          isDark 
+                            ? 'bg-black/40 border-white/10 hover:border-white/20' 
+                            : 'bg-white/90 border-gray-200 hover:border-gray-300'
+                        }`}>
+                          <div className="flex items-start gap-3.5 pr-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 border border-amber-500/20">
+                              <Search className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className={`font-bold text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                  网盘影视资源搜
+                                </h4>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                                  isPansouActive 
+                                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                                    : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+                                }`}>
+                                  {isPansouActive ? '运行中' : '已下架'}
+                                </span>
+                              </div>
+                              <p className={`text-xs mt-1 line-clamp-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                毫秒级全生态网盘聚合搜索，4K原画影视与无损直存 (ID: pansou)
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            onClick={handleTogglePansou}
+                            className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${
+                              isPansouActive 
+                                ? (isDark ? 'bg-blue-600' : 'bg-green-500')
+                                : (isDark ? 'bg-white/10' : 'bg-gray-300')
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+                                isPansouActive ? 'translate-x-8' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Product 2: Reading Pro */}
+                    {(() => {
+                      const isReadingActive = Boolean(productsEnabled?.['reading-pro'] ?? true);
+                      return (
+                        <div className={`p-5 rounded-2xl border transition-all flex items-center justify-between ${
+                          isDark 
+                            ? 'bg-black/40 border-white/10 hover:border-white/20' 
+                            : 'bg-white/90 border-gray-200 hover:border-gray-300'
+                        }`}>
+                          <div className="flex items-start gap-3.5 pr-3">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                              <BookOpen className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className={`font-bold text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                  外刊精读
+                                </h4>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                                  isReadingActive 
+                                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                                    : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+                                }`}>
+                                  {isReadingActive ? '运行中' : '已下架'}
+                                </span>
+                              </div>
+                              <p className={`text-xs mt-1 line-clamp-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                经济学人与纽约客双语精读、书架与电子书阅读器 (ID: reading-pro)
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            onClick={() => handleToggleProduct('reading-pro', '外刊精读')}
+                            className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${
+                              isReadingActive 
+                                ? (isDark ? 'bg-blue-600' : 'bg-green-500')
+                                : (isDark ? 'bg-white/10' : 'bg-gray-300')
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+                                isReadingActive ? 'translate-x-8' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Product 3: AI Investment Agent */}
+                    {(() => {
+                      const isAiActive = Boolean(productsEnabled?.['ai-agent'] ?? true);
+                      return (
+                        <div className={`p-5 rounded-2xl border transition-all flex items-center justify-between ${
+                          isDark 
+                            ? 'bg-black/40 border-white/10 hover:border-white/20' 
+                            : 'bg-white/90 border-gray-200 hover:border-gray-300'
+                        }`}>
+                          <div className="flex items-start gap-3.5 pr-3">
+                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 border border-blue-500/20">
+                              <Cpu className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className={`font-bold text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                  AI 投资智能体
+                                </h4>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                                  isAiActive 
+                                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                                    : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+                                }`}>
+                                  {isAiActive ? '运行中' : '已下架'}
+                                </span>
+                              </div>
+                              <p className={`text-xs mt-1 line-clamp-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                多因子量化分析与大模型辅助投资决策建议 (ID: ai-agent)
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            onClick={() => handleToggleProduct('ai-agent', 'AI 投资智能体')}
+                            className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${
+                              isAiActive 
+                                ? (isDark ? 'bg-blue-600' : 'bg-green-500')
+                                : (isDark ? 'bg-white/10' : 'bg-gray-300')
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+                                isAiActive ? 'translate-x-8' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Product 4: Instant Chat */}
+                    {(() => {
+                      const isChatActive = Boolean(productsEnabled?.['chat'] ?? true);
+                      return (
+                        <div className={`p-5 rounded-2xl border transition-all flex items-center justify-between ${
+                          isDark 
+                            ? 'bg-black/40 border-white/10 hover:border-white/20' 
+                            : 'bg-white/90 border-gray-200 hover:border-gray-300'
+                        }`}>
+                          <div className="flex items-start gap-3.5 pr-3">
+                            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center shrink-0 border border-cyan-500/20">
+                              <MessageSquare className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className={`font-bold text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                  GongPan 即时聊天
+                                </h4>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                                  isChatActive 
+                                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                                    : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+                                }`}>
+                                  {isChatActive ? '运行中' : '已下架'}
+                                </span>
+                              </div>
+                              <p className={`text-xs mt-1 line-clamp-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                256位端到端加密、高私密群组通讯与分布式中继 (ID: chat)
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            onClick={() => handleToggleProduct('chat', '即时聊天')}
+                            className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${
+                              isChatActive 
+                                ? (isDark ? 'bg-blue-600' : 'bg-green-500')
+                                : (isDark ? 'bg-white/10' : 'bg-gray-300')
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+                                isChatActive ? 'translate-x-8' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      );
+                    })()}
+
+                  </div>
                 </div>
 
                 {/* Support QR Code Management */}

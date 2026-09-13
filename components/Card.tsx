@@ -12,12 +12,24 @@ export const Card: React.FC<ProductCardProps> = ({
   href, 
   tag, 
   size = 'normal',
-  onToast
+  onToast,
+  disabled = false,
+  onClick
 }) => {
   const { themeMode, language } = useTheme();
   const isDark = themeMode === 'dark';
 
   const handleClick = (e: React.MouseEvent) => {
+    if (disabled || onClick) {
+      e.preventDefault();
+      if (onClick) {
+        onClick(e);
+      } else if (onToast) {
+        onToast();
+      }
+      return;
+    }
+
     if (href === '#') {
       e.preventDefault();
       if (onToast) onToast();
@@ -45,13 +57,15 @@ export const Card: React.FC<ProductCardProps> = ({
     return 'liquid-glass-pill-light text-black group-hover:border-white group-active:border-white group-hover:bg-white/40 group-active:bg-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_1.5px_rgba(255,255,255,0.8)] group-hover:shadow-[0_4px_14px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)]';
   };
 
-  const ctaText = href === '#' 
-    ? appTranslations[language].comingSoon 
-    : appTranslations[language].visitNow;
+  const ctaText = disabled
+    ? (language === 'zh' ? '暂未开放' : 'Offline')
+    : (href === '#' 
+        ? appTranslations[language].comingSoon 
+        : appTranslations[language].visitNow);
 
   return (
     <Link 
-      to={href === '#' ? '#' : href} 
+      to={href === '#' || disabled ? '#' : href} 
       onClick={handleClick}
       onTouchStart={() => {}}
       onContextMenu={(e) => e.preventDefault()}
@@ -63,6 +77,7 @@ export const Card: React.FC<ProductCardProps> = ({
         ${getGlassClasses()}
         h-[420px] md:h-[500px] flex flex-col cursor-pointer
         select-none [-webkit-touch-callout:none] [-webkit-user-select:none]
+        ${disabled ? 'grayscale-[20%] opacity-90' : ''}
       `}
     >
       {/* Background Media Container */}
@@ -119,8 +134,8 @@ export const Card: React.FC<ProductCardProps> = ({
           )}
           
           <div className={`p-2.5 rounded-full transition-all duration-200 flex items-center justify-center ${getButtonStyle()}`}>
-            {href === '#' ? (
-               <Lock className="w-5 h-5" />
+            {disabled || href === '#' ? (
+               <Lock className="w-5 h-5 opacity-80" />
             ) : (
                <ArrowUpRight className="w-5 h-5 group-hover:rotate-45 group-active:rotate-45 transition-transform duration-200" />
             )}

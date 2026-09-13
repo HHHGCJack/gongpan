@@ -11,6 +11,14 @@ import { WelcomeModal } from './components/WelcomeModal';
 import { SupportModal } from './components/SupportModal';
 import { ThemeContextType, ThemeMode, Language } from './types';
 import { supabase } from './src/lib/supabase';
+import { 
+  getStoredSettings, 
+  saveServerSettings, 
+  fetchServerSettings, 
+  SETTINGS_EVENT, 
+  SiteSettings, 
+  ProductKey 
+} from './src/utils/settings';
 
 // Create Context
 export const ThemeContext = createContext<ThemeContextType>({
@@ -23,6 +31,18 @@ export const ThemeContext = createContext<ThemeContextType>({
   pansouEnabled: true,
   setPansouEnabled: () => {},
   openWelcomeModal: () => {},
+  openSupportModal: () => {},
+  openProductNotice: () => {},
+  welcomeModalEnabled: true,
+  setWelcomeModalEnabled: () => {},
+  productsEnabled: {
+    'pansou': true,
+    'reading-pro': true,
+    'ai-agent': true,
+    'chat': true,
+  },
+  setProductEnabled: () => {},
+  isProductEnabled: () => true,
 });
 
 // Use Context Hook
@@ -40,32 +60,34 @@ export const translations: Record<Language, { comingSoon: string, visitNow: stri
   el: { comingSoon: 'Σύντομα Κοντά Σας Coming Soon', visitNow: 'Επισκεφθείτε τώρα' },
 };
 
-// Simple Toast Component - Liquid Glass
+// Liquid Glass Capsule Floating Toast
 const Toast = ({ message, visible }: { message: string; visible: boolean }) => {
   const { themeMode } = useTheme();
   const isDark = themeMode === 'dark';
   
   return (
     <div 
-      className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-[100] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-        visible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-8 scale-90 pointer-events-none'
+      className={`fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-[200] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none ${
+        visible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-8 scale-90'
       }`}
     >
-      <div className={`px-6 py-3.5 rounded-full border flex items-center space-x-3 transition-all duration-500 relative overflow-hidden liquid-glass ${
+      <div className={`px-6 py-2.5 rounded-full border flex items-center space-x-2.5 relative overflow-hidden liquid-glass shadow-2xl ${
         isDark 
-          ? 'liquid-glass-dark text-white' 
-          : 'liquid-glass-light text-gray-900'
+          ? 'liquid-glass-dark text-white border-white/20 shadow-[0_12px_40px_rgba(0,0,0,0.8),inset_0_1px_1.5px_rgba(255,255,255,0.25)]' 
+          : 'liquid-glass-light text-gray-900 border-white/80 shadow-[0_12px_40px_rgba(0,0,0,0.12),inset_0_1.5px_2px_rgba(255,255,255,0.95)]'
       }`}>
-         {/* Glossy Reflection Overlay */}
-         <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-white/15' : 'from-white/50'} to-transparent h-1/2 pointer-events-none rounded-t-full`} />
-         <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none" />
+         {/* Glossy Specular Reflection Overlay */}
+         <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-white/20' : 'from-white/60'} to-transparent h-1/2 pointer-events-none rounded-t-full`} />
+         <div className="absolute top-0 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none" />
          
-         <span className={`w-2.5 h-2.5 rounded-full animate-pulse relative z-10 ${
+         <span className={`w-2 h-2 rounded-full animate-pulse relative z-10 shrink-0 ${
            isDark 
-             ? 'bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)]' 
-             : 'bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.6)]'
-         }`}></span>
-         <span className="text-sm font-semibold tracking-wide relative z-10">{message}</span>
+             ? 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.9)]' 
+             : 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]'
+         }`} />
+         <span className="text-xs sm:text-sm font-semibold tracking-wide relative z-10 whitespace-nowrap">
+           {message}
+         </span>
       </div>
     </div>
   );
@@ -130,9 +152,11 @@ export const detectSystemTheme = (): ThemeMode => {
 function App() {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('敬请期待 Coming Soon');
+  const toastTimeoutRef = React.useRef<any>(null);
   const [themeMode, setThemeModeState] = useState<ThemeMode>(() => detectSystemTheme());
   const [language, setLanguageState] = useState<Language>(() => detectBrowserLanguage());
   const [pansouEnabled, setPansouEnabled] = useState(true);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => getStoredSettings());
   const [welcomeInitialTab, setWelcomeInitialTab] = useState<'intro' | 'support'>('intro');
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
@@ -153,6 +177,59 @@ function App() {
       localStorage.setItem('gongpan_lang', lang);
     } catch {}
   };
+
+  const setWelcomeModalEnabled = (enabled: boolean) => {
+    setSiteSettings(prev => {
+      const next = { ...prev, welcomeModalEnabled: enabled };
+      saveServerSettings(next);
+      return next;
+    });
+  };
+
+  const setProductEnabled = (key: string, enabled: boolean) => {
+    setSiteSettings(prev => {
+      const next: SiteSettings = {
+        ...prev,
+        productsEnabled: {
+          ...prev.productsEnabled,
+          [key]: enabled
+        }
+      };
+      saveServerSettings(next);
+      if (key === 'pansou') {
+        setPansouEnabled(enabled);
+        try {
+          supabase.from('settings').upsert([{ id: 'pansou_enabled', value: enabled }]);
+        } catch {}
+      }
+      return next;
+    });
+  };
+
+  const isProductEnabled = (key: string): boolean => {
+    if (key === 'pansou' && !pansouEnabled) return false;
+    return siteSettings.productsEnabled[key as ProductKey] ?? true;
+  };
+
+  // Sync settings from server and listen to custom updates
+  useEffect(() => {
+    fetchServerSettings().then(latest => {
+      if (latest) {
+        setSiteSettings(latest);
+        if (typeof latest.productsEnabled?.pansou === 'boolean') {
+          setPansouEnabled(latest.productsEnabled.pansou);
+        }
+      }
+    });
+
+    const handleSettingsUpdate = (e: any) => {
+      if (e?.detail) {
+        setSiteSettings(e.detail);
+      }
+    };
+    window.addEventListener(SETTINGS_EVENT, handleSettingsUpdate);
+    return () => window.removeEventListener(SETTINGS_EVENT, handleSettingsUpdate);
+  }, []);
 
   // Listen to system theme preference changes in real-time
   useEffect(() => {
@@ -246,6 +323,11 @@ function App() {
   // Smooth opening of welcome modal on initial site visit
   useEffect(() => {
     try {
+      // Respect global admin switch for welcome modal
+      if (!siteSettings.welcomeModalEnabled) {
+        return;
+      }
+
       const todayKey = new Date().toISOString().slice(0, 10);
       const dismissedDate = localStorage.getItem('gongpan_welcome_dismiss_date');
       const hasSeenSession = sessionStorage.getItem('gongpan_welcome_seen_session');
@@ -260,7 +342,7 @@ function App() {
     } catch (e) {
       console.error(e);
     }
-  }, []);
+  }, [siteSettings.welcomeModalEnabled]);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -282,9 +364,12 @@ function App() {
   }, []);
 
   const showToast = (message: string) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
     setToastMessage(message);
     setToastVisible(true);
-    setTimeout(() => setToastVisible(false), 2000);
+    toastTimeoutRef.current = setTimeout(() => setToastVisible(false), 2400);
   };
 
   const handleCardToast = () => {
@@ -300,6 +385,55 @@ function App() {
     setSupportModalOpen(true);
   };
 
+  const openProductNotice = (productName: string, customMessage?: string, productId?: string) => {
+    if (customMessage) {
+      showToast(customMessage);
+      return;
+    }
+
+    const clean = (productName || '').toLowerCase();
+    const pid = (productId || '').toLowerCase();
+
+    // 1. 股票智能体 (AI Agent): 提示改为“模型升级中”
+    const isAiAgent = pid === 'ai-agent' || pid === 'ai' || clean.includes('股票') || clean.includes('投资') || clean.includes('agent') || clean.includes('quant') || clean.includes('ai 投资');
+    if (isAiAgent) {
+      const modelUpgradeTexts: Record<Language, string> = {
+        zh: '模型升级中',
+        en: 'Model upgrade in progress',
+        ja: 'モデル更新中',
+        ko: '모델 업그레이드 중',
+        es: 'Actualización del modelo en curso',
+        fr: 'Mise à niveau du modèle en cours',
+        de: 'Modell-Upgrade läuft',
+        el: 'Αναβάθμιση μοντέλου σε εξέλιξη',
+      };
+      showToast(modelUpgradeTexts[language] || '模型升级中');
+      return;
+    }
+
+    // 2. 社交软件 (Chat) 与 智能搜 (Pansou): 提示均为“因政策原因暂停服务”
+    const isChat = pid === 'chat' || clean.includes('chat') || clean.includes('聊天') || clean.includes('社交') || clean.includes('telegram') || clean.includes('messenger');
+    const isPansou = pid === 'pansou' || clean.includes('网盘') || clean.includes('pansou') || clean.includes('搜');
+
+    if (isChat || isPansou) {
+      const policySuspendedTexts: Record<Language, string> = {
+        zh: '因政策原因暂停服务',
+        en: 'Service suspended due to policy',
+        ja: '制限によりサービス停止中',
+        ko: '정책으로 인해 서비스 중지',
+        es: 'Servicio suspendido por política',
+        fr: 'Service suspendu pour des raisons de politique',
+        de: 'Dienst richtlinienbedingt ausgesetzt',
+        el: 'Η υπηρεσία έχει ανασταλεί λόγω πολιτικής',
+      };
+      showToast(policySuspendedTexts[language] || '因政策原因暂停服务');
+      return;
+    }
+
+    // 3. 其他产品
+    showToast(language === 'zh' ? `${productName} 暂未开放` : `${productName} is currently unavailable`);
+  };
+
   return (
     <ThemeContext.Provider value={{ 
       themeMode, 
@@ -311,7 +445,13 @@ function App() {
       pansouEnabled, 
       setPansouEnabled,
       openWelcomeModal,
-      openSupportModal 
+      openSupportModal,
+      openProductNotice,
+      welcomeModalEnabled: siteSettings.welcomeModalEnabled,
+      setWelcomeModalEnabled,
+      productsEnabled: siteSettings.productsEnabled,
+      setProductEnabled,
+      isProductEnabled
     }}>
       <div className={`min-h-screen flex flex-col font-sans selection:bg-blue-500/30 transition-colors duration-300 relative ${themeMode === 'dark' ? 'bg-[#09090b] text-white' : 'bg-[#f6f7fa] text-black'}`}>
         

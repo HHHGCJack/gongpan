@@ -356,7 +356,7 @@ const CHAT_TESTING_NOTICE: Record<string, { badge: string; text: string }> = {
 export const ProductShowcase: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { themeMode, language, showToast, pansouEnabled } = useTheme();
+  const { themeMode, language, showToast, pansouEnabled, isProductEnabled, openProductNotice } = useTheme();
   const isDark = themeMode === 'dark';
 
   const categoryId = normalizeCategoryId(id);
@@ -369,6 +369,9 @@ export const ProductShowcase: React.FC = () => {
 
   const stageT = STAGE_TRANSLATIONS[language] || STAGE_TRANSLATIONS.zh;
   const pageUiT = SHOWCASE_PAGE_UI_TRANSLATIONS[language] || SHOWCASE_PAGE_UI_TRANSLATIONS.zh;
+
+  // Check if product is disabled by admin switch
+  const isEnabled = isProductEnabled ? isProductEnabled(categoryId) : true;
 
   const targetHeroImg = product.heroImage || FALLBACK_HERO_IMAGES[categoryId] || FALLBACK_HERO_IMAGES.pansou;
   const [imgLoaded, setImgLoaded] = useState(true);
@@ -433,6 +436,15 @@ export const ProductShowcase: React.FC = () => {
 
   // Handle CTA Action
   const handleVisit = () => {
+    if (!isEnabled) {
+      if (openProductNotice) {
+        openProductNotice(product.title, undefined, categoryId);
+      } else {
+        showToast(`${product.title} 升级维护中，暂未开放`);
+      }
+      return;
+    }
+
     if (product.requiresPansouCheck && !pansouEnabled) {
       showToast(language === 'zh' ? '因政策原因暂停服务' : 'Service suspended due to policy');
       return;
@@ -623,6 +635,30 @@ export const ProductShowcase: React.FC = () => {
       icon: MessageSquare,
     },
   ];
+
+  if (!isEnabled) {
+    return (
+      <div className={`min-h-[85vh] flex items-center justify-center px-6 py-20 ${isDark ? 'bg-[#09090b] text-white' : 'bg-[#f6f7fa] text-black'}`}>
+        <div className={`max-w-md w-full p-8 rounded-3xl border text-center shadow-xl backdrop-blur-xl ${
+          isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200'
+        }`}>
+          <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">{product.title} 暂未开放</h2>
+          <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            该功能模块当前处于维护或下架调整状态，已在后台暂停展示与访问。
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm transition-all shadow-md active:scale-95 cursor-pointer"
+          >
+            返回主页
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div 
@@ -1916,6 +1952,16 @@ export const ProductShowcase: React.FC = () => {
                 >
                   <Link
                     to={`/showcase/${item.id}`}
+                    onClick={(e) => {
+                      if (isProductEnabled && !isProductEnabled(item.id)) {
+                        e.preventDefault();
+                        if (openProductNotice) {
+                          openProductNotice(item.name, undefined, item.id);
+                        } else {
+                          showToast(`${item.name} 升级维护中，敬请期待`);
+                        }
+                      }
+                    }}
                     className={`p-6 rounded-[2rem] border transition-all duration-300 block relative overflow-hidden group h-full ${
                       isCurrent
                         ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-500/10'

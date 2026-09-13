@@ -35,11 +35,53 @@ app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
 const QR_STORAGE_FILE = path.join(process.cwd(), "public", "support-qr.jpg");
+const SETTINGS_STORAGE_FILE = path.join(process.cwd(), "public", "site-settings.json");
 
 async function startServer() {
   // API routes FIRST
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // Get dynamic site settings (welcome modal switch & product switches)
+  app.get("/api/settings", (req, res) => {
+    try {
+      if (fs.existsSync(SETTINGS_STORAGE_FILE)) {
+        const content = fs.readFileSync(SETTINGS_STORAGE_FILE, "utf-8");
+        res.setHeader("Cache-Control", "no-cache");
+        return res.json(JSON.parse(content));
+      }
+    } catch (err) {
+      console.error("Read settings error:", err);
+    }
+    res.json({
+      welcomeModalEnabled: true,
+      productsEnabled: {
+        'pansou': true,
+        'reading-pro': true,
+        'ai-agent': true,
+        'chat': true,
+      }
+    });
+  });
+
+  // Update dynamic site settings
+  app.post("/api/settings", (req, res) => {
+    try {
+      const newSettings = req.body;
+      if (!newSettings || typeof newSettings !== "object") {
+        return res.status(400).json({ error: "Invalid settings payload" });
+      }
+      const publicDir = path.join(process.cwd(), "public");
+      if (!fs.existsSync(publicDir)) {
+        fs.mkdirSync(publicDir, { recursive: true });
+      }
+      fs.writeFileSync(SETTINGS_STORAGE_FILE, JSON.stringify(newSettings, null, 2), "utf-8");
+      res.json({ success: true, settings: newSettings });
+    } catch (err: any) {
+      console.error("Save settings error:", err);
+      res.status(500).json({ error: "Failed to persist site settings" });
+    }
   });
 
   // Get uploaded support QR code

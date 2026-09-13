@@ -4,7 +4,12 @@ import { Card } from './Card';
 import { useTheme } from '../App';
 
 export const Home: React.FC = () => {
-  const { language } = useTheme();
+  const { language, isProductEnabled, openProductNotice } = useTheme();
+
+  const pansouActive = isProductEnabled ? isProductEnabled('pansou') : true;
+  const readingProActive = isProductEnabled ? isProductEnabled('reading-pro') : true;
+  const aiActive = isProductEnabled ? isProductEnabled('ai-agent') : true;
+  const chatActive = isProductEnabled ? isProductEnabled('chat') : true;
 
   const translations = {
     zh: {
@@ -118,6 +123,11 @@ export const Home: React.FC = () => {
               tag={t.pansou.tag}
               size="wide"
               theme="light"
+              disabled={!pansouActive}
+              onClick={!pansouActive ? (e) => {
+                e.preventDefault();
+                openProductNotice?.(t.pansou.title, undefined, 'pansou');
+              } : undefined}
             />
           </div>
 
@@ -131,6 +141,11 @@ export const Home: React.FC = () => {
               tag={t.readingPro.tag}
               size="normal"
               theme="light"
+              disabled={!readingProActive}
+              onClick={!readingProActive ? (e) => {
+                e.preventDefault();
+                openProductNotice?.(t.readingPro.title, undefined, 'reading-pro');
+              } : undefined}
             />
           </div>
 
@@ -144,6 +159,11 @@ export const Home: React.FC = () => {
               tag={t.ai.tag}
               size="normal"
               theme="dark"
+              disabled={!aiActive}
+              onClick={!aiActive ? (e) => {
+                e.preventDefault();
+                openProductNotice?.(t.ai.title, undefined, 'ai-agent');
+              } : undefined}
             />
           </div>
 
@@ -157,6 +177,11 @@ export const Home: React.FC = () => {
               tag={t.chat.tag}
               size="wide"
               theme="light"
+              disabled={!chatActive}
+              onClick={!chatActive ? (e) => {
+                e.preventDefault();
+                openProductNotice?.(t.chat.title, undefined, 'chat');
+              } : undefined}
             />
           </div>
 

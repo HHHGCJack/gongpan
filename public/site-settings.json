@@ -1,0 +1,9 @@
+{
+  "welcomeModalEnabled": true,
+  "productsEnabled": {
+    "pansou": true,
+    "reading-pro": true,
+    "ai-agent": true,
+    "chat": true
+  }
+}

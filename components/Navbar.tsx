@@ -22,7 +22,18 @@ import { useCardTransition } from '../src/context/CardTransitionContext';
 import { scrollToElementSmoothly } from '../src/utils/smoothScroll';
 
 export const Navbar: React.FC = () => {
-  const { themeMode, setThemeMode, language, setLanguage, showToast, pansouEnabled, openWelcomeModal, openSupportModal } = useTheme();
+  const { 
+    themeMode, 
+    setThemeMode, 
+    language, 
+    setLanguage, 
+    showToast, 
+    pansouEnabled, 
+    openWelcomeModal, 
+    openSupportModal, 
+    isProductEnabled,
+    openProductNotice
+  } = useTheme();
   const { startCollapse, status } = useCardTransition();
   const location = useLocation();
   const navigate = useNavigate();
@@ -195,12 +206,17 @@ export const Navbar: React.FC = () => {
 
   const t = (translations as any)[language] || translations.en;
 
-  const navData = [
+  const rawNavData = [
     { 
       name: t.nav.learn, 
       targetId: 'section-learn',
       items: [
-        { title: t.items.readingPro.title, desc: t.items.readingPro.desc, href: '/showcase/reading-pro' }
+        { 
+          productId: 'reading-pro',
+          title: t.items.readingPro.title, 
+          desc: t.items.readingPro.desc, 
+          href: '/showcase/reading-pro' 
+        }
       ] 
     },
     { 
@@ -208,22 +224,41 @@ export const Navbar: React.FC = () => {
       targetId: 'section-entertainment',
       items: [
         { 
+          productId: 'pansou',
           title: t.items.pansou.title, 
           desc: t.items.pansou.desc, 
           href: '/showcase/pansou'
         },
-        { title: t.items.chat.title, desc: t.items.chat.desc, href: '/showcase/chat' }
+        { 
+          productId: 'chat',
+          title: t.items.chat.title, 
+          desc: t.items.chat.desc, 
+          href: '/showcase/chat' 
+        }
       ] 
     },
     { 
       name: t.nav.tech, 
       targetId: 'section-tech',
       items: [
-        { title: t.items.ai.title, desc: t.items.ai.desc, href: '/showcase/ai-agent' },
-        { title: t.items.lab.title, desc: t.items.lab.desc, href: '/laboratory' }
+        { 
+          productId: 'ai-agent',
+          title: t.items.ai.title, 
+          desc: t.items.ai.desc, 
+          href: '/showcase/ai-agent' 
+        },
+        { 
+          productId: 'lab',
+          title: t.items.lab.title, 
+          desc: t.items.lab.desc, 
+          href: '/laboratory' 
+        }
       ] 
     }
   ];
+
+  // Keep all navigation items visible; disabled ones trigger popup notices on click
+  const navData = rawNavData;
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -335,6 +370,19 @@ export const Navbar: React.FC = () => {
   };
 
   const handleItemClick = (e: React.MouseEvent, title: string, href: string, subItem?: any) => {
+    // Intercept disabled products with popup notice modal instead of navigating
+    if (subItem?.productId && subItem.productId !== 'lab' && isProductEnabled && !isProductEnabled(subItem.productId)) {
+      e.preventDefault();
+      setMobileMenuOpen(false);
+      setActiveDropdown(null);
+      if (openProductNotice) {
+        openProductNotice(title, undefined, subItem.productId);
+      } else {
+        showToast(`${title} 升级维护中，暂未开放`);
+      }
+      return;
+    }
+
     if (href === '#') {
       e.preventDefault();
       if (subItem && subItem.onToast) {
@@ -376,8 +424,20 @@ export const Navbar: React.FC = () => {
 
   const handleShowcaseVisit = () => {
     if (!currentShowcase) return;
+    if ((currentShowcase as any).productId && isProductEnabled && !isProductEnabled((currentShowcase as any).productId)) {
+      if (openProductNotice) {
+        openProductNotice(currentShowcase.title, undefined, (currentShowcase as any).productId);
+      } else {
+        showToast(`${currentShowcase.title} 升级维护中，暂未开放`);
+      }
+      return;
+    }
     if (currentShowcase.requiresPansouCheck && !pansouEnabled) {
-      showToast(language === 'zh' ? '因政策原因暂停服务' : 'Service suspended due to policy');
+      if (openProductNotice) {
+        openProductNotice(currentShowcase.title, undefined, 'pansou');
+      } else {
+        showToast(language === 'zh' ? '因政策原因暂停服务' : 'Service suspended due to policy');
+      }
       return;
     }
     if (currentShowcase.isExternal) {
