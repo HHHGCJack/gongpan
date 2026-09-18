@@ -125,14 +125,14 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
 
   const translations = {
     zh: {
-      badge: '最新版本 v2.9・更新日志',
+      badge: '最新版本 v3.0・更新日志',
       title: '欢迎来到 G胖儿 GongPan',
       subtitle: '极简・纯粹・高效的一站式优质资源与探索平台',
       tabIntro: '🚀 简介与更新日志',
       tabSupport: '💖 支持作者',
       aboutTitle: '平台简介',
       aboutDesc: 'G胖儿 (GongPan) 致力于打造无干扰、高质感的数字体验空间。聚合学习精读、极客工具箱、影视搜索、AI 智能体与前沿科技实验。',
-      updatesTitle: '最新版本特性与视觉升级',
+      updatesTitle: 'v3.0 版本特性与视觉升级',
       fixesTitle: '体验打磨与细节优化',
       updateItems: [
         {
@@ -181,14 +181,14 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
       copiedToast: '感谢您的支持与厚爱！'
     },
     en: {
-      badge: "What's New v2.9・Changelog",
+      badge: "What's New v3.0・Changelog",
       title: 'Welcome to GongPan',
       subtitle: 'A minimalist, high-efficiency portal for tools and premium resources',
       tabIntro: '🚀 Overview & Changelog',
       tabSupport: '💖 Support Me',
       aboutTitle: 'About GongPan',
       aboutDesc: 'GongPan is a distraction-free, Apple-inspired digital hub integrating AI agents, cloud search, tools, and curated portals.',
-      updatesTitle: 'Recent Updates & Design Upgrades',
+      updatesTitle: 'v3.0 Release Features & Design Upgrades',
       fixesTitle: 'UI Polishing & Optimizations',
       updateItems: [
         {
@@ -237,14 +237,14 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
       copiedToast: 'Thank you for your warm support!'
     },
     ja: {
-      badge: '最新情報 v2.9・更新履歴',
+      badge: '最新情報 v3.0・更新履歴',
       title: 'GongPan へようこそ',
       subtitle: '洗练されたデザインと高機能なリソース＆ツールハブ',
       tabIntro: '🚀 概要と更新履歴',
       tabSupport: '💖 開発者を支援',
       aboutTitle: 'サイト紹介',
       aboutDesc: 'GongPan はミニマリスト向けの一体型ポータルです。AI 投資モデル、リソース検索、便利ツールを提供します。',
-      updatesTitle: '最新アップデートとデザイン改善',
+      updatesTitle: 'v3.0 アップデートとデザイン改善',
       fixesTitle: 'UIブラッシュアップと最適化',
       updateItems: [
         {
@@ -293,7 +293,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
       copiedToast: 'ご支援ありがとうございます！'
     },
     ko: {
-      badge: '최신 업데이트 v2.9・변경 내역',
+      badge: '최신 업데이트 v3.0・변경 내역',
       title: 'GongPan 에 오신 것을 환영합니다',
       subtitle: '심플함과 효율성을 극대화한 프리미엄 리소스 허브',
       tabIntro: '🚀 소개 및 업데이트 내역',
@@ -349,7 +349,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
       copiedToast: '응원해 주셔서 진심으로 감사드립니다!'
     },
     es: {
-      badge: 'Novedades v2.9・Historial',
+      badge: 'Novedades v3.0・Historial',
       title: 'Bienvenido a GongPan',
       subtitle: 'Un portal minimalista y eficiente para herramientas y recursos premium',
       tabIntro: '🚀 Resumen y Cambios',
@@ -405,7 +405,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
       copiedToast: '¡Muchas gracias por su apoyo!'
     },
     fr: {
-      badge: 'Nouveautés & Aperçu',
+      badge: 'Nouveautés v3.0・Aperçu',
       title: 'Bienvenue sur GongPan',
       subtitle: 'Un portail minimaliste et puissant pour vos ressources et outils',
       tabIntro: '🚀 Aperçu & Journal',
@@ -461,7 +461,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
       copiedToast: 'Merci infiniment pour votre soutien !'
     },
     de: {
-      badge: 'Neuigkeiten & Übersicht',
+      badge: 'Neuigkeiten v3.0・Übersicht',
       title: 'Willkommen bei GongPan',
       subtitle: 'Ein minimalistisches Portal für Werkzeuge und hochwertige Ressourcen',
       tabIntro: '🚀 Übersicht & Changelog',
@@ -517,7 +517,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
       copiedToast: 'Vielen Dank für Ihre Unterstützung!'
     },
     el: {
-      badge: 'Ενημερώσεις & Επισκόπηση',
+      badge: 'Ενημερώσεις v3.0・Επισκόπηση',
       title: 'Καλώς ήρθατε στο GongPan',
       subtitle: 'Μινιμαλιστική πλατφόρμα εργαλείων και premium πόρων',
       tabIntro: '🚀 Επισκόπηση & Αλλαγές',
