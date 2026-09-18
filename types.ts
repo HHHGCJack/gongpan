@@ -43,8 +43,8 @@ export interface ThemeContextType {
   openSupportModal?: () => void;
   openProductNotice?: (title: string, message?: string, productId?: string) => void;
   welcomeModalEnabled: boolean;
-  setWelcomeModalEnabled: (enabled: boolean) => void;
+  setWelcomeModalEnabled: (enabled: boolean) => Promise<boolean> | void;
   productsEnabled: Record<string, boolean>;
-  setProductEnabled: (key: string, enabled: boolean) => void;
+  setProductEnabled: (key: string, enabled: boolean) => Promise<boolean> | void;
   isProductEnabled: (key: string) => boolean;
 }

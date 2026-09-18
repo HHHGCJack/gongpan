@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Coffee, Download, Gift } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../App';
+import { supabase } from '../src/lib/supabase';
 import { 
   DEFAULT_SUPPORT_QR, 
   SUPPORT_QR_BASE64, 
@@ -29,19 +30,37 @@ export const SupportModal: React.FC<SupportModalProps> = ({
   });
 
   useEffect(() => {
-    fetch('/api/support-qr')
+    let active = true;
+
+    // 1. Try server API with timestamp cache-buster
+    fetch(`/api/support-qr?_t=${Date.now()}`, { cache: 'no-store' })
       .then(res => {
         if (res.ok) return res.blob();
         throw new Error('No custom server qr');
       })
       .then(blob => {
+        if (!active || blob.size < 200) return;
         const url = URL.createObjectURL(blob);
         setQrImage(url);
       })
       .catch(() => {
+        // 2. Try Supabase cloud storage directly
+        try {
+          const { data } = supabase.storage.from('books-media').getPublicUrl('custom-assets/support-qr.jpg');
+          if (data?.publicUrl && active) {
+            const img = new Image();
+            img.onload = () => {
+              if (active) setQrImage(`${data.publicUrl}?_t=${Date.now()}`);
+            };
+            img.src = `${data.publicUrl}?_t=${Date.now()}`;
+          }
+        } catch {}
+
         const saved = localStorage.getItem('custom_support_qr');
-        if (saved) setQrImage(saved);
+        if (saved && active) setQrImage(saved);
       });
+
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {

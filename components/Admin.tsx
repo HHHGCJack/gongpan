@@ -241,6 +241,8 @@ export const Admin: React.FC = () => {
       });
   }, []);
 
+  const [updatingKey, setUpdatingKey] = useState<string | null>(null);
+
   const handleAdminQrUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -250,25 +252,45 @@ export const Admin: React.FC = () => {
       if (base64) {
         setAdminQrImage(base64);
         localStorage.setItem('custom_support_qr', base64);
+        setMessage('正在将赞赏收款码同步上传到云端...');
         try {
+          // 1. Upload to server API
           await fetch('/api/support-qr', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ imageBase64: base64 })
           });
-        } catch (err) {
+
+          // 2. Direct upload to Supabase Storage for all devices
+          const base64Data = base64.replace(/^data:image\/\w+;base64,/, '');
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'image/jpeg' });
+          await supabase.storage
+            .from('books-media')
+            .upload('custom-assets/support-qr.jpg', blob, { upsert: true, contentType: 'image/jpeg' });
+
+          setMessage('✅ 赞赏收款码已成功同步至云端，所有设备即时生效！');
+        } catch (err: any) {
           console.error(err);
+          setMessage('赞赏收款码已在本地生效');
         }
-        setMessage('赞赏收款码原图已成功上传并生效！');
       }
     };
     reader.readAsDataURL(file);
   };
 
-  const handleAdminResetQr = () => {
+  const handleAdminResetQr = async () => {
     localStorage.removeItem('custom_support_qr');
     setAdminQrImage(DEFAULT_SUPPORT_QR);
-    setMessage('已重置为默认收款码');
+    try {
+      await supabase.storage.from('books-media').remove(['custom-assets/support-qr.jpg']);
+    } catch {}
+    setMessage('已重置为默认收款码 (云端已同步)');
   };
 
   const sensors = useSensors(
@@ -520,38 +542,42 @@ export const Admin: React.FC = () => {
     }
   };
 
-  const handleTogglePansou = async () => {
-    const newValue = !pansouEnabled;
+  const handleToggleWelcomeModal = async () => {
+    const nextVal = !welcomeModalEnabled;
+    setUpdatingKey('welcome');
+    setMessage('正在同步「全站开屏欢迎弹窗」设置到云端...');
     try {
-      setProductEnabled('pansou', newValue);
-      setPansouEnabled(newValue);
-      const { error } = await supabase
-        .from('settings')
-        .upsert([{ id: 'pansou_enabled', value: newValue }]);
-        
-      if (error) {
-        console.warn('Supabase settings warning:', error);
-      }
-      setMessage(`网盘影视资源搜功能已${newValue ? '开启' : '关闭'}`);
-    } catch (err: any) {
-      console.error('Failed to update settings:', err);
-      setMessage(`网盘影视资源搜已${newValue ? '开启' : '关闭'} (本地已生效)`);
+      await setWelcomeModalEnabled(nextVal);
+      setMessage(`全站开屏欢迎弹窗已${nextVal ? '开启展示' : '关闭静默'} (已全网跨设备生效)`);
+    } catch (e: any) {
+      setMessage(`更新失败: ${e?.message || '网络异常'}`);
+    } finally {
+      setUpdatingKey(null);
     }
   };
 
-  const handleToggleWelcomeModal = () => {
-    const nextVal = !welcomeModalEnabled;
-    setWelcomeModalEnabled(nextVal);
-    setMessage(`全站开屏欢迎弹窗已${nextVal ? '开启展示' : '关闭静默'}`);
-  };
-
-  const handleToggleProduct = (key: string, name: string) => {
+  const handleToggleProduct = async (key: string, name: string) => {
     const currentVal = key === 'pansou' 
       ? pansouEnabled 
       : (productsEnabled?.[key] ?? true);
     const nextVal = !currentVal;
-    setProductEnabled(key, nextVal);
-    setMessage(`产品「${name}」已${nextVal ? '开启上架' : '关闭下架'}`);
+    setUpdatingKey(key);
+    setMessage(`正在同步「${name}」状态到云端数据库...`);
+    try {
+      await setProductEnabled(key, nextVal);
+      if (key === 'pansou') {
+        setPansouEnabled(nextVal);
+      }
+      setMessage(`产品「${name}」已${nextVal ? '开启上架' : '关闭下架'} (已全网跨设备生效)`);
+    } catch (e: any) {
+      setMessage(`同步失败: ${e?.message || '网络异常'}`);
+    } finally {
+      setUpdatingKey(null);
+    }
+  };
+
+  const handleTogglePansou = () => {
+    handleToggleProduct('pansou', '网盘影视资源搜');
   };
 
   const getGlassClasses = () => {
@@ -847,11 +873,12 @@ export const Admin: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleToggleWelcomeModal}
+                      disabled={Boolean(updatingKey)}
                       className={`relative inline-flex h-8 w-16 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${
                         welcomeModalEnabled 
                           ? (isDark ? 'bg-blue-600' : 'bg-green-500')
                           : (isDark ? 'bg-white/10' : 'bg-gray-300')
-                      }`}
+                      } ${updatingKey === 'welcome' ? 'opacity-60 cursor-wait' : ''}`}
                     >
                       <span
                         className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
@@ -921,11 +948,12 @@ export const Admin: React.FC = () => {
                           <button
                             type="button"
                             onClick={handleTogglePansou}
+                            disabled={Boolean(updatingKey)}
                             className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${
                               isPansouActive 
                                 ? (isDark ? 'bg-blue-600' : 'bg-green-500')
                                 : (isDark ? 'bg-white/10' : 'bg-gray-300')
-                            }`}
+                            } ${updatingKey === 'pansou' ? 'opacity-60 cursor-wait' : ''}`}
                           >
                             <span
                               className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
@@ -972,11 +1000,12 @@ export const Admin: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleToggleProduct('reading-pro', '外刊精读')}
+                            disabled={Boolean(updatingKey)}
                             className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${
                               isReadingActive 
                                 ? (isDark ? 'bg-blue-600' : 'bg-green-500')
                                 : (isDark ? 'bg-white/10' : 'bg-gray-300')
-                            }`}
+                            } ${updatingKey === 'reading-pro' ? 'opacity-60 cursor-wait' : ''}`}
                           >
                             <span
                               className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
@@ -1023,11 +1052,12 @@ export const Admin: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleToggleProduct('ai-agent', 'AI 投资智能体')}
+                            disabled={Boolean(updatingKey)}
                             className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${
                               isAiActive 
                                 ? (isDark ? 'bg-blue-600' : 'bg-green-500')
                                 : (isDark ? 'bg-white/10' : 'bg-gray-300')
-                            }`}
+                            } ${updatingKey === 'ai-agent' ? 'opacity-60 cursor-wait' : ''}`}
                           >
                             <span
                               className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
@@ -1074,11 +1104,12 @@ export const Admin: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleToggleProduct('chat', '即时聊天')}
+                            disabled={Boolean(updatingKey)}
                             className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${
                               isChatActive 
                                 ? (isDark ? 'bg-blue-600' : 'bg-green-500')
                                 : (isDark ? 'bg-white/10' : 'bg-gray-300')
-                            }`}
+                            } ${updatingKey === 'chat' ? 'opacity-60 cursor-wait' : ''}`}
                           >
                             <span
                               className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${

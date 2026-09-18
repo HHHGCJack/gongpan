@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import cors from "cors";
 import compression from "compression";
+import { createClient } from "@supabase/supabase-js";
 import { 
   securityHeaders, 
   antiBotShield, 
@@ -37,6 +38,14 @@ app.use(express.urlencoded({ limit: '15mb', extended: true }));
 const QR_STORAGE_FILE = path.join(process.cwd(), "public", "support-qr.jpg");
 const SETTINGS_STORAGE_FILE = path.join(process.cwd(), "public", "site-settings.json");
 
+const DEFAULT_SUPABASE_URL = "https://fttrstntocxevmztzdho.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0dHJzdG50b2N4ZXZtenR6ZGhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MTc0MjksImV4cCI6MjA4ODE5MzQyOX0.uO08r3yb0JGncry_s8g-VrHeymbhWXzVDbguoa_orU8";
+
+const serverSupabase = createClient(
+  process.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL,
+  process.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY
+);
+
 async function startServer() {
   // API routes FIRST
   app.get("/api/health", (req, res) => {
@@ -44,17 +53,14 @@ async function startServer() {
   });
 
   // Get dynamic site settings (welcome modal switch & product switches)
-  app.get("/api/settings", (req, res) => {
-    try {
-      if (fs.existsSync(SETTINGS_STORAGE_FILE)) {
-        const content = fs.readFileSync(SETTINGS_STORAGE_FILE, "utf-8");
-        res.setHeader("Cache-Control", "no-cache");
-        return res.json(JSON.parse(content));
-      }
-    } catch (err) {
-      console.error("Read settings error:", err);
-    }
-    res.json({
+  app.get("/api/settings", async (req, res) => {
+    // Explicitly disallow any caching across all proxies, CDNs, and client devices
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("Surrogate-Control", "no-store");
+
+    let finalSettings = {
       welcomeModalEnabled: true,
       productsEnabled: {
         'pansou': true,
@@ -62,21 +68,86 @@ async function startServer() {
         'ai-agent': true,
         'chat': true,
       }
-    });
+    };
+
+    // 1. Try reading from Supabase for absolute cross-device truth
+    try {
+      const { data: dbRows, error } = await serverSupabase
+        .from("settings")
+        .select("id, value");
+
+      if (!error && Array.isArray(dbRows) && dbRows.length > 0) {
+        const map: Record<string, boolean> = {};
+        dbRows.forEach((r: any) => {
+          if (r && typeof r.id === "string") {
+            map[r.id] = Boolean(r.value);
+          }
+        });
+
+        finalSettings = {
+          welcomeModalEnabled: map["welcome_modal_enabled"] ?? true,
+          productsEnabled: {
+            "pansou": map["pansou_enabled"] ?? true,
+            "reading-pro": map["reading_pro_enabled"] ?? true,
+            "ai-agent": map["ai_agent_enabled"] ?? true,
+            "chat": map["chat_enabled"] ?? true,
+          }
+        };
+
+        // Sync to local file as backup cache
+        try {
+          const publicDir = path.join(process.cwd(), "public");
+          if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+          fs.writeFileSync(SETTINGS_STORAGE_FILE, JSON.stringify(finalSettings, null, 2), "utf-8");
+        } catch {}
+
+        return res.json(finalSettings);
+      }
+    } catch (dbErr) {
+      console.warn("Supabase fetch failed on /api/settings, falling back to local file:", dbErr);
+    }
+
+    // 2. Fallback to local file
+    try {
+      if (fs.existsSync(SETTINGS_STORAGE_FILE)) {
+        const content = fs.readFileSync(SETTINGS_STORAGE_FILE, "utf-8");
+        return res.json(JSON.parse(content));
+      }
+    } catch (err) {
+      console.error("Read settings file error:", err);
+    }
+
+    return res.json(finalSettings);
   });
 
   // Update dynamic site settings
-  app.post("/api/settings", (req, res) => {
+  app.post("/api/settings", async (req, res) => {
     try {
       const newSettings = req.body;
       if (!newSettings || typeof newSettings !== "object") {
         return res.status(400).json({ error: "Invalid settings payload" });
       }
+
       const publicDir = path.join(process.cwd(), "public");
       if (!fs.existsSync(publicDir)) {
         fs.mkdirSync(publicDir, { recursive: true });
       }
       fs.writeFileSync(SETTINGS_STORAGE_FILE, JSON.stringify(newSettings, null, 2), "utf-8");
+
+      // Sync directly to Supabase
+      try {
+        const rows = [
+          { id: "pansou_enabled", value: Boolean(newSettings.productsEnabled?.["pansou"] ?? true) },
+          { id: "reading_pro_enabled", value: Boolean(newSettings.productsEnabled?.["reading-pro"] ?? true) },
+          { id: "ai_agent_enabled", value: Boolean(newSettings.productsEnabled?.["ai-agent"] ?? true) },
+          { id: "chat_enabled", value: Boolean(newSettings.productsEnabled?.["chat"] ?? true) },
+          { id: "welcome_modal_enabled", value: Boolean(newSettings.welcomeModalEnabled ?? true) },
+        ];
+        await serverSupabase.from("settings").upsert(rows);
+      } catch (dbSyncErr) {
+        console.warn("Async Supabase sync warning:", dbSyncErr);
+      }
+
       res.json({ success: true, settings: newSettings });
     } catch (err: any) {
       console.error("Save settings error:", err);
@@ -85,17 +156,26 @@ async function startServer() {
   });
 
   // Get uploaded support QR code
-  app.get("/api/support-qr", (req, res) => {
+  app.get("/api/support-qr", async (req, res) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     if (fs.existsSync(QR_STORAGE_FILE)) {
       res.setHeader("Content-Type", "image/jpeg");
-      res.setHeader("Cache-Control", "public, max-age=3600");
       return res.sendFile(QR_STORAGE_FILE);
     }
+
+    // Check Supabase storage fallback for cross-container instances
+    try {
+      const { data } = serverSupabase.storage.from("books-media").getPublicUrl("custom-assets/support-qr.jpg");
+      if (data?.publicUrl) {
+        return res.redirect(data.publicUrl);
+      }
+    } catch {}
+
     res.status(404).send("Not found");
   });
 
   // Upload exact original support QR code (With payload and magic byte verification)
-  app.post("/api/support-qr", (req, res) => {
+  app.post("/api/support-qr", async (req, res) => {
     try {
       const { imageBase64 } = req.body;
       if (!imageBase64 || typeof imageBase64 !== "string") {
@@ -121,6 +201,18 @@ async function startServer() {
         fs.mkdirSync(publicDir, { recursive: true });
       }
       fs.writeFileSync(QR_STORAGE_FILE, buffer);
+
+      // Also sync to Supabase Storage for multi-container & multi-device durability
+      try {
+        await serverSupabase.storage
+          .from("books-media")
+          .upload("custom-assets/support-qr.jpg", buffer, {
+            contentType: "image/jpeg",
+            upsert: true,
+          });
+      } catch (sErr) {
+        console.warn("Storage QR upload warning:", sErr);
+      }
 
       // Also update src/assets/support_qr_base64.ts for bundled fallback
       const assetsDir = path.join(process.cwd(), "src", "assets");

@@ -178,32 +178,27 @@ function App() {
     } catch {}
   };
 
-  const setWelcomeModalEnabled = (enabled: boolean) => {
-    setSiteSettings(prev => {
-      const next = { ...prev, welcomeModalEnabled: enabled };
-      saveServerSettings(next);
-      return next;
-    });
+  const setWelcomeModalEnabled = async (enabled: boolean): Promise<boolean> => {
+    const next = { ...siteSettings, welcomeModalEnabled: enabled };
+    setSiteSettings(next);
+    const result = await saveServerSettings(next);
+    return result.success;
   };
 
-  const setProductEnabled = (key: string, enabled: boolean) => {
-    setSiteSettings(prev => {
-      const next: SiteSettings = {
-        ...prev,
-        productsEnabled: {
-          ...prev.productsEnabled,
-          [key]: enabled
-        }
-      };
-      saveServerSettings(next);
-      if (key === 'pansou') {
-        setPansouEnabled(enabled);
-        try {
-          supabase.from('settings').upsert([{ id: 'pansou_enabled', value: enabled }]);
-        } catch {}
+  const setProductEnabled = async (key: string, enabled: boolean): Promise<boolean> => {
+    const next: SiteSettings = {
+      ...siteSettings,
+      productsEnabled: {
+        ...siteSettings.productsEnabled,
+        [key]: enabled
       }
-      return next;
-    });
+    };
+    setSiteSettings(next);
+    if (key === 'pansou') {
+      setPansouEnabled(enabled);
+    }
+    const result = await saveServerSettings(next);
+    return result.success;
   };
 
   const isProductEnabled = (key: string): boolean => {
@@ -211,24 +206,51 @@ function App() {
     return siteSettings.productsEnabled[key as ProductKey] ?? true;
   };
 
-  // Sync settings from server and listen to custom updates
+  // Sync settings from server and listen to custom updates across devices
   useEffect(() => {
-    fetchServerSettings().then(latest => {
-      if (latest) {
-        setSiteSettings(latest);
-        if (typeof latest.productsEnabled?.pansou === 'boolean') {
-          setPansouEnabled(latest.productsEnabled.pansou);
+    const syncLatest = () => {
+      fetchServerSettings().then(latest => {
+        if (latest) {
+          setSiteSettings(latest);
+          if (typeof latest.productsEnabled?.pansou === 'boolean') {
+            setPansouEnabled(latest.productsEnabled.pansou);
+          }
         }
-      }
-    });
+      });
+    };
 
+    // 1. Initial immediate sync on mount
+    syncLatest();
+
+    // 2. Refresh when switching tabs/windows or waking device from sleep
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        syncLatest();
+      }
+    };
+    window.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', syncLatest);
+
+    // 3. Periodic light background poll (every 25 seconds) to ensure cross-device consistency
+    const pollTimer = setInterval(syncLatest, 25000);
+
+    // 4. In-page event listener
     const handleSettingsUpdate = (e: any) => {
       if (e?.detail) {
         setSiteSettings(e.detail);
+        if (typeof e.detail.productsEnabled?.pansou === 'boolean') {
+          setPansouEnabled(e.detail.productsEnabled.pansou);
+        }
       }
     };
     window.addEventListener(SETTINGS_EVENT, handleSettingsUpdate);
-    return () => window.removeEventListener(SETTINGS_EVENT, handleSettingsUpdate);
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', syncLatest);
+      window.removeEventListener(SETTINGS_EVENT, handleSettingsUpdate);
+      clearInterval(pollTimer);
+    };
   }, []);
 
   // Listen to system theme preference changes in real-time
