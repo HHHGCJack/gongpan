@@ -47,29 +47,29 @@ export const Hero: React.FC = () => {
   return (
     <section 
       id="hero-cover"
-      className={`relative w-full h-[100svh] min-h-[100svh] max-h-[100svh] flex items-center justify-center overflow-hidden transition-colors duration-500 select-none pt-14 md:pt-16`}
+      className={`relative w-full h-screen min-h-screen sm:h-[100dvh] sm:min-h-[100dvh] flex items-center justify-center transition-colors duration-500 select-none px-4`}
     >
-      {/* Main Center Brand Cover - Optically Balanced Midpoint */}
-      <div className="flex flex-col items-center justify-center w-full px-4 text-center -translate-y-3 sm:-translate-y-4 md:-translate-y-6">
-        <div className="relative h-24 sm:h-32 md:h-44 w-full flex justify-center items-center">
+      {/* Main Center Brand Cover - Pure Dead-Center Alignment */}
+      <div className="flex flex-col items-center justify-center w-full max-w-5xl mx-auto text-center">
+        <div className="relative h-28 sm:h-38 md:h-48 lg:h-56 w-full flex items-center justify-center overflow-visible">
           {words.map((word, index) => {
             const isActive = index === activeIndex;
             return (
               <span
                 key={index}
-                className={`absolute transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+                className={`absolute inset-0 flex items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
                   isActive
                     ? 'opacity-100 transform translate-y-0 scale-100 pointer-events-auto'
                     : 'opacity-0 transform translate-y-4 scale-95 pointer-events-none'
-                } ${themeMode === 'dark' ? 'text-white drop-shadow-[0_2px_20px_rgba(255,255,255,0.25)]' : 'text-gray-900 drop-shadow-sm'}`}
+                } ${themeMode === 'dark' ? 'text-white drop-shadow-[0_2px_22px_rgba(255,255,255,0.26)]' : 'text-gray-900 drop-shadow-sm'}`}
                 style={{
                   fontFamily: '"SF Pro Rounded", "Arial Rounded MT Bold", "Nunito", "Varela Round", sans-serif',
                   fontWeight: 900,
                   fontSize: ['cn', 'jp', 'kr'].includes(word.lang) 
-                    ? 'clamp(2.7rem, 13vw, 7.5rem)' 
-                    : 'clamp(3.1rem, 15vw, 9rem)',
-                  lineHeight: 1.1,
-                  letterSpacing: '-0.02em',
+                    ? 'clamp(3.1rem, 13.5vw, 8.2rem)' 
+                    : 'clamp(3.4rem, 15vw, 9.2rem)',
+                  lineHeight: 1.18,
+                  letterSpacing: '-0.025em',
                   willChange: isActive ? 'transform, opacity' : 'auto'
                 }}
               >
@@ -89,7 +89,7 @@ export const Hero: React.FC = () => {
       </div>
 
       {/* Floating Bottom Scroll Prompt Indicator - Positioned naturally near bottom edge */}
-      <div className="absolute bottom-4 sm:bottom-5 md:bottom-7 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center pointer-events-auto">
+      <div className="absolute bottom-5 sm:bottom-7 md:bottom-9 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center pointer-events-auto">
         <motion.button
           onClick={scrollToContent}
           initial={{ opacity: 0 }}

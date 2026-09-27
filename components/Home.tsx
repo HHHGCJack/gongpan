@@ -118,7 +118,7 @@ export const Home: React.FC = () => {
             <Card
               title={t.pansou.title}
               description={t.pansou.desc}
-              imageUrl="https://wsrv.nl/?url=images.unsplash.com/photo-1618005182384-a83a8bd57fbe&w=800&q=50&output=webp"
+              imageUrl="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=60"
               href="/showcase/pansou"
               tag={t.pansou.tag}
               size="wide"
@@ -136,7 +136,7 @@ export const Home: React.FC = () => {
             <Card
               title={t.readingPro.title}
               description={t.readingPro.desc}
-              imageUrl="https://wsrv.nl/?url=images.unsplash.com/photo-1550592704-6c76defa9985&w=500&q=50&output=webp"
+              imageUrl="https://images.unsplash.com/photo-1550592704-6c76defa9985?auto=format&fit=crop&w=800&q=60"
               href="/showcase/reading-pro"
               tag={t.readingPro.tag}
               size="normal"
@@ -154,7 +154,7 @@ export const Home: React.FC = () => {
             <Card
               title={t.ai.title}
               description={t.ai.desc}
-              imageUrl="https://wsrv.nl/?url=images.unsplash.com/photo-1611974789855-9c2a0a7236a3&w=800&q=60&output=webp"
+              imageUrl="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=60"
               href="/showcase/ai-agent"
               tag={t.ai.tag}
               size="normal"
@@ -172,7 +172,7 @@ export const Home: React.FC = () => {
             <Card
               title={t.chat.title}
               description={t.chat.desc}
-              imageUrl="https://wsrv.nl/?url=images.unsplash.com/photo-1611746872915-64382b5c76da&w=800&q=50&output=webp"
+              imageUrl="https://images.unsplash.com/photo-1611746872915-64382b5c76da?auto=format&fit=crop&w=800&q=60"
               href="/showcase/chat"
               tag={t.chat.tag}
               size="wide"

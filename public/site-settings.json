@@ -1,5 +1,5 @@
 {
-  "welcomeModalEnabled": true,
+  "welcomeModalEnabled": false,
   "productsEnabled": {
     "pansou": true,
     "reading-pro": true,

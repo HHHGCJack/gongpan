@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Github, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../App';
+import { preloadWelcomeModal, preloadSupportModal } from '../src/utils/preload';
 
 type ModalType = 'privacy' | 'terms' | 'contact' | null;
 
@@ -208,10 +209,18 @@ export const Footer: React.FC = () => {
             {t.copyright}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 mt-2">
-            <button onClick={() => openWelcomeModal && openWelcomeModal('intro')} className={`text-xs font-medium transition-colors flex items-center space-x-1 ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}>
+            <button 
+              type="button"
+              onClick={() => openWelcomeModal && openWelcomeModal('intro')} 
+              className={`text-xs font-medium transition-colors flex items-center space-x-1 cursor-pointer ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
+            >
               <span>{t.updates}</span>
             </button>
-            <button onClick={() => openSupportModal && openSupportModal()} className={`text-xs font-medium transition-colors flex items-center space-x-1 ${isDark ? 'text-rose-400 hover:text-rose-300' : 'text-rose-600 hover:text-rose-700'}`}>
+            <button 
+              type="button"
+              onClick={() => openSupportModal && openSupportModal()} 
+              className={`text-xs font-medium transition-colors flex items-center space-x-1 cursor-pointer ${isDark ? 'text-rose-400 hover:text-rose-300' : 'text-rose-600 hover:text-rose-700'}`}
+            >
               <span>💖 {language === 'zh' ? '支持我' : language === 'en' ? 'Support' : '応援'}</span>
             </button>
             <button onClick={() => setActiveModal('privacy')} className={`text-xs font-medium transition-colors ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}>{t.privacy}</button>
@@ -226,13 +235,13 @@ export const Footer: React.FC = () => {
       <AnimatePresence>
         {activeModal && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 md:p-8 pointer-events-auto overscroll-none">
-            {/* Click-away overlay without full screen blur or darkening */}
+            {/* Click-away overlay without black darkening */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute inset-0 bg-transparent" 
+              className="absolute inset-0 bg-transparent cursor-pointer" 
               onClick={closeModal} 
             />
             

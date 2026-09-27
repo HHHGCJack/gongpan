@@ -16,12 +16,20 @@
     <meta name="apple-mobile-web-app-title" content="GongPan" />
 
     <!-- Resource Hints & Image Preconnects for ultra-fast asset loading -->
+    <link rel="dns-prefetch" href="https://wsrv.nl" />
+    <link rel="preconnect" href="https://wsrv.nl" crossorigin />
     <link rel="dns-prefetch" href="https://pic1.imgdb.cn" />
     <link rel="preconnect" href="https://pic1.imgdb.cn" crossorigin />
     <link rel="preconnect" href="https://images.unsplash.com" />
     <link rel="preconnect" href="https://img2.nloln.de" />
 
-    <!-- Preload critical logos for instant theme switching & zero-lag rendering -->
+    <!-- Preload critical logos, support QR codes, and primary photos for instant zero-lag rendering -->
+    <link rel="preload" as="image" href="/support-qr.webp" type="image/webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="/support-qr.jpg" type="image/jpeg" fetchpriority="high" />
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=60" fetchpriority="high" />
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1550592704-6c76defa9985?auto=format&fit=crop&w=800&q=60" fetchpriority="high" />
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=60" />
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1611746872915-64382b5c76da?auto=format&fit=crop&w=800&q=60" />
     <link rel="preload" as="image" href="https://pic1.imgdb.cn/i/034Btz7zzuwPNEbWvK0iIG.jpg" fetchpriority="high" />
     <link rel="preload" as="image" href="https://pic1.imgdb.cn/i/034Btz7qvfI0vFKCCLUwsk.jpg" fetchpriority="high" />
     <script>

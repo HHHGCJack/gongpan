@@ -5,6 +5,7 @@ import { useTheme } from '../App';
 import { supabase } from '../src/lib/supabase';
 import { 
   DEFAULT_SUPPORT_QR, 
+  SUPPORT_QR_LOCAL,
   SUPPORT_QR_BASE64, 
   SUPPORT_QR_SOURCES 
 } from '../src/assets/support_qr_base64';
@@ -20,48 +21,50 @@ export const SupportModal: React.FC<SupportModalProps> = ({
 }) => {
   const { themeMode, language } = useTheme();
   const isDark = themeMode === 'dark';
+  const [qrSourceIndex, setQrSourceIndex] = useState(0);
   const [qrImage, setQrImage] = useState<string>(() => {
-    const saved = localStorage.getItem('custom_support_qr');
-    if (saved && (saved.includes('nloln.de') || saved.includes('img2.') || saved.includes('support_qr_code_1787368553422'))) {
-      localStorage.removeItem('custom_support_qr');
+    try {
+      const saved = localStorage.getItem('custom_support_qr');
+      if (saved && (saved.includes('nloln.de') || saved.includes('img2.') || saved.includes('support_qr_code_1787368553422') || saved.length > 500000)) {
+        localStorage.removeItem('custom_support_qr');
+        return DEFAULT_SUPPORT_QR;
+      }
+      return saved || DEFAULT_SUPPORT_QR;
+    } catch {
       return DEFAULT_SUPPORT_QR;
     }
-    return saved || DEFAULT_SUPPORT_QR;
   });
 
+  // Highest priority pre-warming of QR code
   useEffect(() => {
-    let active = true;
+    if (typeof window !== 'undefined') {
+      const img1 = new Image();
+      img1.fetchPriority = 'high';
+      img1.src = DEFAULT_SUPPORT_QR;
+      img1.decode?.().catch(() => {});
 
-    // 1. Try server API with timestamp cache-buster
-    fetch(`/api/support-qr?_t=${Date.now()}`, { cache: 'no-store' })
-      .then(res => {
-        if (res.ok) return res.blob();
-        throw new Error('No custom server qr');
-      })
-      .then(blob => {
-        if (!active || blob.size < 200) return;
-        const url = URL.createObjectURL(blob);
-        setQrImage(url);
-      })
-      .catch(() => {
-        // 2. Try Supabase cloud storage directly
-        try {
-          const { data } = supabase.storage.from('books-media').getPublicUrl('custom-assets/support-qr.jpg');
-          if (data?.publicUrl && active) {
-            const img = new Image();
-            img.onload = () => {
-              if (active) setQrImage(`${data.publicUrl}?_t=${Date.now()}`);
-            };
-            img.src = `${data.publicUrl}?_t=${Date.now()}`;
-          }
-        } catch {}
-
-        const saved = localStorage.getItem('custom_support_qr');
-        if (saved && active) setQrImage(saved);
-      });
-
-    return () => { active = false; };
+      const img2 = new Image();
+      img2.src = SUPPORT_QR_LOCAL;
+      img2.decode?.().catch(() => {});
+    }
   }, []);
+
+  const handleQrError = () => {
+    const nextIndex = qrSourceIndex + 1;
+    if (nextIndex < SUPPORT_QR_SOURCES.length) {
+      setQrSourceIndex(nextIndex);
+      setQrImage(SUPPORT_QR_SOURCES[nextIndex]);
+    }
+  };
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('custom_support_qr');
+      if (saved && !saved.includes('nloln.de') && !saved.includes('img2.') && saved.length < 500000) {
+        setQrImage(saved);
+      }
+    } catch {}
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -145,7 +148,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 overflow-hidden pointer-events-auto overscroll-none">
-          {/* Transparent Backdrop (Does not darken background) */}
+          {/* Transparent Backdrop (No black darkening behind modal) */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -194,18 +197,14 @@ export const SupportModal: React.FC<SupportModalProps> = ({
             <div className="p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-white shadow-2xl border border-gray-200/80 dark:border-white/40 flex flex-col items-center justify-center mx-auto w-full max-w-[340px] sm:max-w-[420px] transition-all duration-300">
               <div className="overflow-hidden rounded-xl sm:rounded-2xl w-full flex items-center justify-center">
                 <img 
-                  src={qrImage || SUPPORT_QR_BASE64} 
+                  src={qrImage || DEFAULT_SUPPORT_QR} 
                   alt="Support QR Code" 
                   loading="eager"
-                  decoding="async"
+                  fetchPriority="high"
+                  decoding="sync"
                   referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (target.src !== SUPPORT_QR_BASE64) {
-                      target.src = SUPPORT_QR_BASE64;
-                    }
-                  }}
-                  className="w-full h-auto rounded-xl object-contain max-h-[340px] sm:max-h-[420px]" 
+                  onError={handleQrError}
+                  className="w-full h-auto rounded-xl object-contain max-h-[340px] sm:max-h-[420px] transform-gpu [content-visibility:visible]" 
                 />
               </div>
             </div>

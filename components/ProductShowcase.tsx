@@ -72,6 +72,7 @@ import {
   GongPanChatMessenger 
 } from './ProductWorkstations';
 import { BetaApplyModal } from './BetaApplyModal';
+import { preloadRoute } from '../src/utils/preload';
 
 // Normalized category matcher
 const normalizeCategoryId = (rawId: string | undefined): string => {
@@ -421,7 +422,10 @@ export const ProductShowcase: React.FC = () => {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' as any });
-  }, [categoryId]);
+    if (product.targetUrl && product.targetUrl.startsWith('/')) {
+      preloadRoute(product.targetUrl);
+    }
+  }, [categoryId, product.targetUrl]);
 
   // Handle ESC key to smooth return
   useEffect(() => {
@@ -840,7 +844,9 @@ export const ProductShowcase: React.FC = () => {
           <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-white/20 via-white/5 to-transparent pointer-events-none rounded-t-[2rem] z-20" />
 
           {/* Dynamic Stage Canvas */}
-          <div className="relative w-full h-full rounded-[1.6rem] sm:rounded-[2.2rem] overflow-hidden bg-black/95 flex items-center justify-center">
+          <div className="relative w-full h-full rounded-[1.6rem] sm:rounded-[2.2rem] overflow-hidden bg-slate-900/90 dark:bg-black/90 flex items-center justify-center">
+            {/* Ambient specular gradient so the container is luminous immediately */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${product.gradient || 'from-blue-600/30 via-indigo-600/20 to-transparent'} opacity-80 pointer-events-none`} />
             
             <img
               ref={imgRef}
@@ -849,6 +855,7 @@ export const ProductShowcase: React.FC = () => {
               alt={product.title}
               decoding="async"
               loading="eager"
+              fetchPriority="high"
               onLoad={() => setImgLoaded(true)}
               onError={() => {
                 const fallback = FALLBACK_HERO_IMAGES[categoryId] || FALLBACK_HERO_IMAGES.pansou;
@@ -857,8 +864,8 @@ export const ProductShowcase: React.FC = () => {
                 }
                 setImgLoaded(true);
               }}
-              className={`w-full h-full object-cover object-center transition-all duration-700 ${
-                imgLoaded ? 'opacity-35 scale-100' : 'opacity-0 scale-105'
+              className={`w-full h-full object-cover object-center transition-all duration-500 ${
+                imgLoaded ? 'opacity-35 scale-100' : 'opacity-20 scale-100 blur-[2px]'
               }`}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
@@ -1925,7 +1932,7 @@ export const ProductShowcase: React.FC = () => {
             >
               <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none bg-gradient-to-b from-white/30 dark:from-white/15 to-transparent" />
               <ArrowLeft size={14} className="transition-transform duration-200 group-hover:-translate-x-0.5 relative z-10" />
-              <span className="relative z-10">{pageUiT.backToHub}</span>
+              <span className="relative z-10">{(pageUiT as any)?.backToHub || '返回产品矩阵'}</span>
             </button>
           </motion.div>
 

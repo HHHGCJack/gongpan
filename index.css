@@ -20,23 +20,43 @@ a, img, button, [role="button"], .liquid-glass {
 @layer utilities {
   /* Liquid Glassmorphism - Master Base with High-Performance Hardware Acceleration */
   .liquid-glass {
-    backdrop-filter: blur(16px) saturate(160%);
     -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
 
   .liquid-glass-heavy {
-    backdrop-filter: blur(20px) saturate(170%);
     -webkit-backdrop-filter: blur(20px) saturate(170%);
+    backdrop-filter: blur(20px) saturate(170%);
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
 
   @media (max-width: 768px) {
     .liquid-glass {
-      backdrop-filter: blur(10px) saturate(140%);
       -webkit-backdrop-filter: blur(10px) saturate(140%);
+      backdrop-filter: blur(10px) saturate(140%);
     }
     .liquid-glass-heavy {
-      backdrop-filter: blur(14px) saturate(150%);
       -webkit-backdrop-filter: blur(14px) saturate(150%);
+      backdrop-filter: blur(14px) saturate(150%);
+    }
+  }
+
+  /* Robust fallback for systems with hardware acceleration or backdrop-filter disabled */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .liquid-glass-light {
+      background: rgba(255, 255, 255, 0.92) !important;
+    }
+    .liquid-glass-dark {
+      background: rgba(20, 20, 24, 0.92) !important;
+    }
+    .liquid-glass-pill-light {
+      background: rgba(255, 255, 255, 0.96) !important;
+    }
+    .liquid-glass-pill-dark {
+      background: rgba(30, 30, 35, 0.96) !important;
     }
   }
 

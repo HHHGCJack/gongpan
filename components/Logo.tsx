@@ -39,6 +39,9 @@ export const Logo: React.FC<LogoProps> = ({ size = 36, className = '' }) => {
         referrerPolicy="no-referrer"
         loading="eager"
         decoding="async"
+        onError={(e) => {
+          e.currentTarget.src = isDark ? '/logo-dark.jpg' : '/logo-light.jpg';
+        }}
       />
     </div>
   );

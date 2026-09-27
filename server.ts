@@ -31,6 +31,11 @@ app.use(antiBotShield);
 // Global & API Rate Limiting (Protects from scraping & brute-force)
 app.use(rateLimiter(200, 60000));
 
+// HTTP Gzip/Brotli/Deflate compression for fast loading and low bandwidth
+app.use(compression({
+  threshold: 1024
+}));
+
 app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));
@@ -61,7 +66,7 @@ async function startServer() {
     res.setHeader("Surrogate-Control", "no-store");
 
     let finalSettings = {
-      welcomeModalEnabled: true,
+      welcomeModalEnabled: false,
       productsEnabled: {
         'pansou': true,
         'reading-pro': true,

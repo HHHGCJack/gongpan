@@ -19,7 +19,7 @@ export interface SiteSettings {
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
-  welcomeModalEnabled: true,
+  welcomeModalEnabled: false,
   productsEnabled: {
     'pansou': true,
     'reading-pro': true,
@@ -144,7 +144,7 @@ export async function fetchServerSettings(): Promise<SiteSettings> {
       const fromDb = parseSettingsFromDb(dbRows);
       if (fromDb && fromDb.productsEnabled) {
         fetchedData = {
-          welcomeModalEnabled: fromDb.welcomeModalEnabled ?? fetchedData?.welcomeModalEnabled ?? true,
+          welcomeModalEnabled: fromDb.welcomeModalEnabled ?? fetchedData?.welcomeModalEnabled ?? false,
           productsEnabled: {
             'pansou': fromDb.productsEnabled['pansou'] ?? fetchedData?.productsEnabled?.['pansou'] ?? true,
             'reading-pro': fromDb.productsEnabled['reading-pro'] ?? fetchedData?.productsEnabled?.['reading-pro'] ?? true,
@@ -160,7 +160,7 @@ export async function fetchServerSettings(): Promise<SiteSettings> {
 
   if (fetchedData && fetchedData.productsEnabled) {
     const completeSettings: SiteSettings = {
-      welcomeModalEnabled: fetchedData.welcomeModalEnabled ?? true,
+      welcomeModalEnabled: fetchedData.welcomeModalEnabled ?? false,
       productsEnabled: {
         'pansou': fetchedData.productsEnabled['pansou'] ?? true,
         'reading-pro': fetchedData.productsEnabled['reading-pro'] ?? true,

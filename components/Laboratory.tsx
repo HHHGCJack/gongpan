@@ -509,7 +509,7 @@ export const Laboratory: React.FC = () => {
                 {/* Formatted Code copy cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 pt-4 border-t border-white/5">
                   <div className="p-4 rounded-2xl bg-black/25 border border-white/5 relative group">
-                    <span className="text-xs font-mono font-bold text-gray-500 block mb-2">{translations.glass.cssCode}</span>
+                    <span className="text-xs font-mono font-bold text-gray-500 block mb-2">{(translations.glass as any).cssCode || 'CSS Code'}</span>
                     <pre className="font-mono text-xs text-[#82aaff] overflow-x-auto whitespace-pre-wrap select-all leading-relaxed">
                       {getGlassStyleString()}
                     </pre>
@@ -522,7 +522,7 @@ export const Laboratory: React.FC = () => {
                   </div>
 
                   <div className="p-4 rounded-2xl bg-black/25 border border-white/5 relative group">
-                    <span className="text-xs font-mono font-bold text-gray-500 block mb-2">{translations.glass.twCode}</span>
+                    <span className="text-xs font-mono font-bold text-gray-500 block mb-2">{(translations.glass as any).twCode || 'Tailwind Code'}</span>
                     <pre className="font-mono text-xs text-amber-500 overflow-x-auto whitespace-pre-wrap select-all leading-relaxed">
                       {getGlassTailwindString()}
                     </pre>
@@ -559,7 +559,7 @@ export const Laboratory: React.FC = () => {
                     <textarea
                       value={jsonInput}
                       onChange={(e) => setJsonInput(e.target.value)}
-                      placeholder={translations.json.placeholder}
+                      placeholder={(translations.json as any).placeholder || 'Paste JSON here...'}
                       className="w-full h-80 p-4 font-mono text-xs rounded-2xl border focus:outline-none transition-all resize-none bg-black/35 border-white/5 text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
@@ -616,7 +616,7 @@ export const Laboratory: React.FC = () => {
 
                   <div className="flex gap-3">
                     <button
-                      onClick={() => processJson('beauty')}
+                      onClick={() => processJson('beautify')}
                       className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs"
                     >
                       {translations.json.btnBeautify}
@@ -654,7 +654,7 @@ export const Laboratory: React.FC = () => {
                     <textarea
                       value={codecInput}
                       onChange={(e) => setCodecInput(e.target.value)}
-                      placeholder={translations.codec.placeholder}
+                      placeholder={(translations.codec as any).placeholder || 'Type or paste content...'}
                       className="w-full h-80 p-4 font-mono text-xs rounded-2xl border focus:outline-none transition-all resize-none bg-black/35 border-white/5 text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
