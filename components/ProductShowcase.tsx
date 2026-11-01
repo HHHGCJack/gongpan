@@ -462,13 +462,7 @@ export const ProductShowcase: React.FC = () => {
   };
 
   // ---------------------------------------------------------------------------
-  // 1. GLOBAL SCROLL PROGRESS BAR (FLOWING IRIDESCENT STREAM & SMOOTH PHYSICS)
-  // ---------------------------------------------------------------------------
-  const { scrollYProgress: globalScrollYProgress } = useScroll();
-  const globalProgress = useSpring(globalScrollYProgress, { stiffness: 120, damping: 24, mass: 0.2 });
-
-  // ---------------------------------------------------------------------------
-  // 2. HERO CONTINUOUS FLUID SCROLL PARALLAX (Prompt Responsive & High Amplitude)
+  // 1. HERO CONTINUOUS FLUID SCROLL PARALLAX (Prompt Responsive & High Amplitude)
   // ---------------------------------------------------------------------------
   const { scrollY } = useScroll();
   const heroTiltSmooth = useSpring(scrollY, { stiffness: 110, damping: 20, mass: 0.2 });
@@ -674,16 +668,6 @@ export const ProductShowcase: React.FC = () => {
       }}
       className="relative min-h-screen selection:bg-blue-500/30 overflow-x-hidden font-sans pt-14 pb-32"
     >
-      
-      {/* Top Global Scroll Progress Bar - Flowing Iridescent Stream (流光溢彩) */}
-      <motion.div 
-        style={{ scaleX: globalProgress, transformOrigin: 'left' }}
-        className="fixed top-14 left-0 right-0 h-[3px] z-50 pointer-events-none iridescent-stream shadow-[0_0_12px_rgba(192,132,252,0.45),_0_0_6px_rgba(56,189,248,0.4)] overflow-hidden"
-      >
-        {/* Soft specular light gleam overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-pulse pointer-events-none" />
-      </motion.div>
-
       {/* Dynamic Ambient Background Aura */}
       <div 
         className="fixed inset-0 pointer-events-none -z-10 transition-colors duration-1000"

@@ -43,6 +43,8 @@ export interface ThemeContextType {
   setPansouEnabled: (enabled: boolean) => void;
   openWelcomeModal?: (tab?: 'intro' | 'support') => void;
   openSupportModal?: () => void;
+  openSearchModal?: () => void;
+  closeSearchModal?: () => void;
   openProductNotice?: (title: string, message?: string, productId?: string) => void;
   welcomeModalEnabled: boolean;
   setWelcomeModalEnabled: (enabled: boolean) => Promise<boolean> | void;

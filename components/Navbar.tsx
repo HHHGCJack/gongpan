@@ -12,7 +12,8 @@ import {
   ArrowLeft, 
   ArrowUpRight, 
   Sparkles,
-  Heart
+  Heart,
+  Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../App';
@@ -32,6 +33,7 @@ export const Navbar: React.FC = () => {
     pansouEnabled, 
     openWelcomeModal, 
     openSupportModal, 
+    openSearchModal,
     isProductEnabled,
     openProductNotice
   } = useTheme();
@@ -64,7 +66,7 @@ export const Navbar: React.FC = () => {
         pansou: { title: '网盘资源搜', desc: '全网影视资源聚合' },
         chat: { title: '即时聊天软件', desc: '中国人自己的Telegram' },
         ai: { title: 'AI 投资智能体', desc: 'AI驱动的智能投资决策' },
-        lab: { title: '实验室', desc: '极客实验性工具箱' },
+        lab: { title: '实验室', desc: '极客工具与实验性小游戏' },
       },
       support: '支持我',
       supportThanks: '感谢支持',
@@ -86,7 +88,7 @@ export const Navbar: React.FC = () => {
         pansou: { title: 'Cloud Search', desc: 'Movie resource aggregation' },
         chat: { title: 'Instant Chat', desc: 'Chinese own Telegram' },
         ai: { title: 'AI Investment Agent', desc: 'AI-driven investment intelligence' },
-        lab: { title: 'Laboratory', desc: 'Experimental Sandbox' },
+        lab: { title: 'Laboratory', desc: 'Geek Tools & Mini Games' },
       },
       support: 'Support Me',
       supportThanks: 'Thanks for Support',
@@ -652,6 +654,20 @@ export const Navbar: React.FC = () => {
               {themeMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
+            {/* Global Search Button - Icon Only, to the right of Dark Mode Switcher */}
+            <button
+              onClick={() => openSearchModal?.()}
+              className={`p-2 rounded-full transition-colors ${
+                themeMode === 'dark' 
+                  ? 'hover:bg-white/10 text-gray-300' 
+                  : 'hover:bg-black/5 text-gray-600'
+              }`}
+              title={language === 'zh' ? '搜索' : 'Search'}
+              aria-label="Search"
+            >
+              <Search size={18} />
+            </button>
+
             {/* Support Me Button */}
             {!isShowcasePage && (
               <button 
@@ -782,25 +798,25 @@ export const Navbar: React.FC = () => {
               }`}
             >
               <div className="flex flex-col pb-16">
-                {isShowcasePage && (
-                  <div className="mb-4">
-                    <button
-                      onClick={() => {
-                        navigate('/');
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center space-x-2 transition-all duration-300 active:scale-95 border relative overflow-hidden ${
-                        themeMode === 'dark'
-                          ? 'liquid-glass liquid-glass-pill-dark text-white border-white/25 shadow-[0_8px_25px_rgba(0,0,0,0.5),inset_0_1.5px_1.5px_rgba(255,255,255,0.3)] hover:bg-white/15'
-                          : 'liquid-glass liquid-glass-pill-light text-gray-900 border-white/80 shadow-[0_8px_25px_rgba(0,0,0,0.08),inset_0_1.5px_1.5px_rgba(255,255,255,1)] hover:bg-white/80'
-                      }`}
-                    >
-                      <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none bg-gradient-to-b from-white/30 dark:from-white/15 to-transparent" />
-                      <ArrowLeft size={16} className="relative z-10" />
-                      <span className="relative z-10">{t.backToHome}</span>
-                    </button>
-                  </div>
-                )}
+                {/* Mobile Search Quick Trigger */}
+                <div className="mb-4">
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      openSearchModal?.();
+                    }}
+                    className={`w-full py-3 px-4 rounded-2xl font-semibold text-sm flex items-center space-x-3 transition-all active:scale-[0.99] border ${
+                      themeMode === 'dark'
+                        ? 'bg-white/[0.06] border-white/10 text-gray-300 hover:text-white'
+                        : 'bg-black/[0.04] border-black/10 text-gray-700 hover:text-black'
+                    }`}
+                  >
+                    <Search size={18} className="text-gray-400 shrink-0" />
+                    <span className="text-gray-400 text-sm">
+                      {language === 'zh' ? '搜索产品、工具与小游戏...' : 'Search products, tools, games...'}
+                    </span>
+                  </button>
+                </div>
 
                 {navData.map((link, idx) => {
                   const isExpanded = !!mobileExpandedCategories[idx];

@@ -8,6 +8,14 @@ html {
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+  color-scheme: light;
+  scrollbar-color: rgba(156, 163, 175, 0.45) transparent;
+  scrollbar-width: thin;
+}
+
+html.dark {
+  color-scheme: dark;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
 }
 
 /* Global Safari 3D Touch / Long-Press Preview Suppression for Links & Cards */
@@ -221,30 +229,32 @@ a, img, button, [role="button"], .liquid-glass {
   scrollbar-width: none;
 }
 
-@keyframes iridescentFlow {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+/* Browser Native Scrollbar Adaptation */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.iridescent-stream {
-  background: linear-gradient(
-    90deg,
-    #38bdf8 0%,
-    #818cf8 16%,
-    #c084fc 32%,
-    #f472b6 48%,
-    #fb923c 64%,
-    #34d399 82%,
-    #38bdf8 100%
-  );
-  background-size: 250% 100%;
-  animation: iridescentFlow 6s linear infinite;
-  will-change: background-position;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.65);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.25);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.45);
+}
+

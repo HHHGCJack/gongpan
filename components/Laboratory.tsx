@@ -1,15 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../App';
-import { Copy, Check, Code, Terminal, Layers, FileText, AlertCircle } from 'lucide-react';
+import { 
+  Copy, 
+  Check, 
+  Code, 
+  Terminal, 
+  Layers, 
+  FileText, 
+  AlertCircle,
+  Gamepad2,
+  Wrench,
+  ExternalLink,
+  Sparkles,
+  Play,
+  Flame,
+  Zap,
+  ArrowUpRight
+} from 'lucide-react';
 import { BackButton } from './BackButton';
 
 export const Laboratory: React.FC = () => {
   const { themeMode, language, showToast } = useTheme();
   
-  // UI Tab Active State
+  // Category Active State: 'tools' (工具) | 'games' (小游戏)
+  const [activeCategory, setActiveCategory] = useState<'tools' | 'games'>('tools');
+
+  // UI Tab Active State for Tools
   const [activeTab, setActiveTab] = useState<'glass' | 'json' | 'codec' | 'token'>('glass');
   const isDark = themeMode === 'dark';
+
+  // Sync category with URL parameters or hash
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get('category') || params.get('tab');
+    if (cat === 'games' || cat === 'game') {
+      setActiveCategory('games');
+    } else if (cat === 'tools' || cat === 'tool') {
+      setActiveCategory('tools');
+    } else if (window.location.hash === '#games') {
+      setActiveCategory('games');
+    }
+  }, []);
 
   // State: Common copied indicator
   const [copiedText, setCopiedText] = useState<string | null>(null);
@@ -169,6 +201,55 @@ export const Laboratory: React.FC = () => {
     zh: {
       labTitle: "创新实验室",
       labSub: "极客专属的前沿实验性交互工具箱与在线沙盒。所有数据就地即时运算，确保纯粹的隐私与安全。",
+      categories: {
+        tools: "工具",
+        games: "小游戏",
+        toolsCount: "4 款工具",
+        gamesCount: "2 款小游戏",
+        toolsSubtitle: "极客专属的前沿实验性交互工具箱与在线沙盒。所有数据就地即时运算，确保纯粹的隐私与安全。",
+        gamesSubtitle: "精选趣味轻量级网页互动小游戏，点击即可极速跳转畅玩，免下载无需安装。"
+      },
+      games: {
+        title: "实验性小游戏",
+        subtitle: "点击卡片或按钮即可跳转到专属网页开启沉浸式畅玩体验。",
+        instantBadge: "网页直开 · 免安装",
+        playBtn: "开始游戏",
+        copyLinkBtn: "复制链接",
+        openNewTab: "在新窗口打开",
+        jumpPrompt: "点击跳转至游戏网页",
+        items: [
+          {
+            id: 'roadster',
+            title: 'Roadster · 气动逃逸',
+            subtitle: '百万级尊界旗舰突袭 · 全频段遥遥领先',
+            desc: '“当百万级东方旗舰尊界以雷霆之势席卷公路，车头璀璨星徽伴随着余总亲授的‘遥遥领先’、‘绝对对得起那四个字’、‘一千万以内最好的SUV’、‘让他们永远追不上’原声震撼灌顶！凡俗座驾在如此纯血豪威面前，唯有长按空格启动冷气推进器冲向天空，方能感受被时代巨轮遥遥领先的尊贵压迫感。”',
+            url: 'https://roadster-game-d4gk0fp9k5bde5fd2-1508914020.tcloudbaseapp.com/roadster-game/',
+            tag: '遥遥领先',
+            features: ['🏆 尊界 S800 亲临公路，随机震撼播放五大天籁原声金句', '🔥 凡人跑车紧急升空避让，感受东方豪华旗舰的无上威严', '🚗 绝对对得起那四个字，见证连尾灯都让人永远追不上的魄力'],
+            themeGradient: 'from-rose-500/20 via-orange-500/10 to-transparent',
+            themeBorder: 'border-rose-500/30 hover:border-rose-500/60',
+            glowColor: 'rgba(244, 63, 94, 0.25)',
+            badgeColor: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+            buttonGradient: 'from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 shadow-rose-500/20',
+            type: '旗舰巡礼'
+          },
+          {
+            id: 'zhuzhiliao',
+            title: '竹知了 · 一转就哇哇叫',
+            subtitle: 'huawei.dog 纯血声学奇迹 · 响彻云霄之音',
+            desc: '“傲立于顶级尊贵域名 huawei.dog 之上的划时代东方声学巨制！无需任何高深算力堆砌，只需按住指针优雅转动，即可原汁原味召唤‘一千万以内最好’、‘都买得起’、‘啊我们这个是吧’与‘遥遥领先’天籁圣训。指尖转速越快，澎湃的爱国信仰与声浪越震耳欲聋，全球累计狂转超一亿次，真正实现了让全世界友商在耳朵里都永远追不上的超凡境界！”',
+            url: 'https://huawei.dog/',
+            tag: '纯血声学',
+            features: ['🌐 尊享顶级域名 huawei.dog，血统纯正声学体验', '🎙️ 完美收录余总‘一千万以内最好’、‘遥遥领先’天籁圣训', '⚡ 累计狂转突破 1 亿次，转得越猛、信仰越强、叫声越宏亮'],
+            themeGradient: 'from-emerald-500/20 via-teal-500/10 to-transparent',
+            themeBorder: 'border-emerald-500/30 hover:border-emerald-500/60',
+            glowColor: 'rgba(16, 185, 129, 0.25)',
+            badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+            buttonGradient: 'from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-500/20',
+            type: '声学奇迹'
+          }
+        ]
+      },
       tabs: {
         glass: "磨砂玻璃卡片生成器",
         json: "JSON 格式化校验",
@@ -231,6 +312,55 @@ export const Laboratory: React.FC = () => {
     en: {
       labTitle: "Inno Laboratory",
       labSub: "An interactive utility toolbox & playground built specifically for web geeks and developers. Run locally instantly.",
+      categories: {
+        tools: "Tools",
+        games: "Mini Games",
+        toolsCount: "4 Tools",
+        gamesCount: "2 Games",
+        toolsSubtitle: "An interactive utility toolbox & playground built specifically for web geeks and developers. Run locally instantly.",
+        gamesSubtitle: "Curated lightweight web mini-games. Click to jump directly and play in browser without installation."
+      },
+      games: {
+        title: "Experimental Mini-Games",
+        subtitle: "Click any card or button to jump to the web game and enjoy an instant immersive play session.",
+        instantBadge: "Browser Instant Play · No Install",
+        playBtn: "Play Now",
+        copyLinkBtn: "Copy Link",
+        openNewTab: "Open in New Tab",
+        jumpPrompt: "Click to jump to game website",
+        items: [
+          {
+            id: 'roadster',
+            title: 'Roadster · Air Run',
+            subtitle: 'Million-Dollar Zunjie Flagship Blitz · Unrivaled Supremacy',
+            desc: '"When the pinnacle million-dollar flagship Zunjie dominates the highway with thunderous authority, beaming Yu Chengdong\'s sacred aphorisms (\'Far, Far Ahead\', \'Truly worthy of those four words\', \'Best SUV under 10 million\', \'Leave them hopelessly behind\') right into your soul! Mere mortal sports cars can only hold space to blast cold-gas thrusters and take flight, basking in the supreme prestige of being outpaced by history\'s greatest automotive miracle."',
+            url: 'https://roadster-game-d4gk0fp9k5bde5fd2-1508914020.tcloudbaseapp.com/roadster-game/',
+            tag: 'Far Ahead',
+            features: ['🏆 Zunjie S800 blitzes the highway with 5 authentic voice clips', '🔥 Mere sports cars take flight to salute the supreme flagship aura', '🚗 Truly worthy of those four words, unmatched and unreachable'],
+            themeGradient: 'from-rose-500/20 via-orange-500/10 to-transparent',
+            themeBorder: 'border-rose-500/30 hover:border-rose-500/60',
+            glowColor: 'rgba(244, 63, 94, 0.25)',
+            badgeColor: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+            buttonGradient: 'from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 shadow-rose-500/20',
+            type: 'Flagship Salute'
+          },
+          {
+            id: 'zhuzhiliao',
+            title: 'Bamboo Cicada · Whirling Toy',
+            subtitle: 'Purebred Acoustic Wonder on "huawei.dog"',
+            desc: '"An epoch-making acoustic miracle gloriously hosted on the ultra-prestigious domain huawei.dog! No complex chipsets required—simply hold and spin the pointer to channel the sacred mantras: \'Best under 10 million\', \'Everyone can afford it\', and \'Far, Far Ahead\'. The faster you spin, the higher the patriotic fervor surges. Over 100 million communal spins worldwide, achieving an acoustic transcendence that competitors can never, ever catch up to!"',
+            url: 'https://huawei.dog/',
+            tag: 'Holy Acoustics',
+            features: ['🌐 Anchored on the prestigious huawei.dog domain', '🎙️ Authentic master recordings of "Far, Far Ahead" and "Best under 10M"', '⚡ Over 100M spins worldwide—spin faster for deafening glory'],
+            themeGradient: 'from-emerald-500/20 via-teal-500/10 to-transparent',
+            themeBorder: 'border-emerald-500/30 hover:border-emerald-500/60',
+            glowColor: 'rgba(16, 185, 129, 0.25)',
+            badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+            buttonGradient: 'from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-500/20',
+            type: 'Acoustic Miracle'
+          }
+        ]
+      },
       tabs: {
         glass: "Glassmorphism Designer",
         json: "JSON Validator & Beautifier",
@@ -346,7 +476,7 @@ export const Laboratory: React.FC = () => {
       </div>
 
       {/* Hero Header Area */}
-      <div className="mb-10 text-center md:text-left">
+      <div className="mb-8 text-center md:text-left">
         <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-500 text-xs font-bold uppercase tracking-wider mb-4 shadow-sm">
           <Terminal size={14} />
           <span>GongPan Laboratory</span>
@@ -355,13 +485,72 @@ export const Laboratory: React.FC = () => {
           {translations.labTitle}
         </h1>
         <p className={`text-base md:text-lg max-w-2xl ${isDark ? 'text-gray-400' : 'text-gray-600'} leading-relaxed`}>
-          {translations.labSub}
+          {activeCategory === 'tools' ? translations.categories.toolsSubtitle : translations.categories.gamesSubtitle}
         </p>
       </div>
 
-      {/* Laboratory main Grid container */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Navigation selection rail */}
+      {/* Top Category Switcher: "工具" vs "小游戏" */}
+      <div className="flex items-center gap-3 mb-8 overflow-x-auto pb-1 scrollbar-none">
+        <button
+          onClick={() => setActiveCategory('tools')}
+          className={`inline-flex items-center space-x-2.5 px-6 py-3 rounded-2xl border text-sm font-black transition-all cursor-pointer ${
+            activeCategory === 'tools'
+              ? isDark
+                ? 'bg-blue-600/20 border-blue-500/40 text-blue-400 shadow-[0_4px_20px_rgba(59,130,246,0.25)]'
+                : 'bg-blue-500/10 border-blue-500/30 text-blue-600 shadow-[0_4px_20px_rgba(59,130,246,0.12)]'
+              : isDark
+                ? 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                : 'bg-black/5 border-black/10 text-gray-600 hover:text-black hover:bg-black/10'
+          }`}
+        >
+          <Wrench size={18} />
+          <span>{translations.categories.tools}</span>
+          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+            activeCategory === 'tools'
+              ? isDark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-500/20 text-blue-700'
+              : isDark ? 'bg-white/10 text-gray-400' : 'bg-black/10 text-gray-600'
+          }`}>
+            4
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveCategory('games')}
+          className={`inline-flex items-center space-x-2.5 px-6 py-3 rounded-2xl border text-sm font-black transition-all cursor-pointer ${
+            activeCategory === 'games'
+              ? isDark
+                ? 'bg-purple-600/20 border-purple-500/40 text-purple-400 shadow-[0_4px_20px_rgba(168,85,247,0.25)]'
+                : 'bg-purple-500/10 border-purple-500/30 text-purple-600 shadow-[0_4px_20px_rgba(168,85,247,0.12)]'
+              : isDark
+                ? 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                : 'bg-black/5 border-black/10 text-gray-600 hover:text-black hover:bg-black/10'
+          }`}
+        >
+          <Gamepad2 size={18} />
+          <span>{translations.categories.games}</span>
+          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+            activeCategory === 'games'
+              ? isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-500/20 text-purple-700'
+              : isDark ? 'bg-white/10 text-gray-400' : 'bg-black/10 text-gray-600'
+          }`}>
+            2
+          </span>
+        </button>
+      </div>
+
+      {/* Category Content: Tools vs Games */}
+      <AnimatePresence mode="wait">
+        {activeCategory === 'tools' ? (
+          <motion.div
+            key="category-tools"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.22 }}
+          >
+            {/* Laboratory main Grid container */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Navigation selection rail */}
         <div className="lg:col-span-3 flex flex-row lg:flex-col gap-2 p-1.5 rounded-3xl border border-white/20 backdrop-blur-md bg-white/5 overflow-x-auto lg:overflow-visible shrink-0 scrollbar-none">
           <button
             onClick={() => setActiveTab('glass')}
@@ -856,6 +1045,209 @@ export const Laboratory: React.FC = () => {
           </AnimatePresence>
         </div>
       </div>
+    </motion.div>
+  ) : (
+    <motion.div
+      key="category-games"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.22 }}
+      className="space-y-8"
+    >
+      {/* Category Subheader / Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 md:p-6 rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-md">
+        <div className="flex items-center space-x-3.5">
+          <div className={`p-3 rounded-2xl border ${isDark ? 'bg-purple-500/10 border-purple-500/20 text-purple-400' : 'bg-purple-50 border-purple-200 text-purple-600'}`}>
+            <Gamepad2 size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl md:text-2xl font-black tracking-tight flex items-center gap-2.5">
+              <span>{translations.games.title}</span>
+              <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                {translations.categories.gamesCount}
+              </span>
+            </h2>
+            <p className={`text-xs md:text-sm mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              {translations.games.subtitle}
+            </p>
+          </div>
+        </div>
+        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-semibold self-start sm:self-auto shrink-0">
+          <Sparkles size={14} className="animate-pulse" />
+          <span>{translations.games.instantBadge}</span>
+        </div>
+      </div>
+
+      {/* Games Grid (2 cards) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        {translations.games.items.map((game) => (
+          <motion.div
+            key={game.id}
+            whileHover={{ y: -4, scale: 1.01 }}
+            transition={{ duration: 0.2 }}
+            className={`group relative flex flex-col justify-between rounded-[2.5rem] p-6 md:p-8 border transition-all duration-300 overflow-hidden ${
+              isDark 
+                ? `bg-black/40 ${game.themeBorder} shadow-[0_20px_50px_rgba(0,0,0,0.5)]` 
+                : `bg-white/70 ${game.themeBorder} shadow-[0_20px_50px_rgba(0,0,0,0.06)]`
+            } backdrop-blur-xl`}
+            style={{
+              boxShadow: `0 20px 50px -10px ${game.glowColor}`
+            }}
+          >
+            {/* Dynamic ambient background glow */}
+            <div 
+              className={`absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl pointer-events-none opacity-40 group-hover:opacity-70 transition-opacity duration-500 bg-gradient-to-br ${game.themeGradient}`} 
+            />
+            
+            <div>
+              {/* Card Top Pill & Header */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center space-x-2">
+                  <span className={`text-[11px] font-black px-3 py-1 rounded-full border uppercase tracking-wider ${game.badgeColor}`}>
+                    {game.tag}
+                  </span>
+                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-gray-400">
+                    {game.type}
+                  </span>
+                </div>
+                
+                <a
+                  href={game.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={game.title}
+                  className={`p-2.5 rounded-xl border border-white/10 transition-colors ${
+                    isDark ? 'bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white' : 'bg-black/5 hover:bg-black/10 text-gray-700 hover:text-black'
+                  }`}
+                  title={translations.games.openNewTab}
+                >
+                  <ExternalLink size={16} />
+                </a>
+              </div>
+
+              {/* Interactive Artwork / Banner Box (Clickable directly) */}
+              <a
+                href={game.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block mb-6 rounded-2xl overflow-hidden border border-white/10 relative group/banner cursor-pointer"
+                title={translations.games.jumpPrompt}
+              >
+                <div className={`h-44 sm:h-52 w-full flex flex-col items-center justify-center p-6 text-center relative transition-transform duration-500 group-hover/banner:scale-[1.02] bg-gradient-to-br ${
+                  game.id === 'roadster'
+                    ? 'from-[#1a0808] via-[#0e0f14] to-[#080d1a]'
+                    : 'from-[#071911] via-[#091512] to-[#0e171b]'
+                }`}>
+                  {/* Graphical Visual Element */}
+                  {game.id === 'roadster' ? (
+                    <div className="relative flex flex-col items-center">
+                      <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center mb-3 shadow-[0_0_30px_rgba(244,63,94,0.4)] group-hover/banner:scale-110 transition-transform duration-300">
+                        <Flame size={32} className="text-rose-400" />
+                      </div>
+                      <div className="font-mono text-xs tracking-widest uppercase text-rose-400/90 font-bold flex items-center gap-1.5">
+                        <Zap size={12} />
+                        <span>ROADSTER / AIR RUN</span>
+                      </div>
+                      <div className="text-[11px] text-gray-400 mt-1 font-mono">
+                        Cold-Gas Thruster Leap · Traffic Escape
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative flex flex-col items-center">
+                      <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center mb-3 shadow-[0_0_30px_rgba(16,185,129,0.4)] group-hover/banner:scale-110 transition-transform duration-300">
+                        <Sparkles size={32} className="text-emerald-400" />
+                      </div>
+                      <div className="font-mono text-xs tracking-widest uppercase text-emerald-400/90 font-bold flex items-center gap-1.5">
+                        <span>🎋</span>
+                        <span>BAMBOO CICADA · 哇哇叫</span>
+                      </div>
+                      <div className="text-[11px] text-gray-400 mt-1 font-mono">
+                        Centrifugal Orbit · Rosin Friction Audio
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Hover Overlay with Play badge */}
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover/banner:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <span className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-full bg-white text-black font-black text-xs shadow-2xl transform translate-y-2 group-hover/banner:translate-y-0 transition-transform duration-300">
+                      <Play size={14} fill="currentColor" />
+                      <span>{translations.games.playBtn}</span>
+                      <ArrowUpRight size={14} />
+                    </span>
+                  </div>
+                </div>
+              </a>
+
+              {/* Title & Subtitle */}
+              <div className="mb-4">
+                <h3 className="text-2xl font-black tracking-tight mb-1 group-hover:text-blue-400 transition-colors">
+                  {game.title}
+                </h3>
+                <p className="text-xs font-semibold text-blue-500">
+                  {game.subtitle}
+                </p>
+              </div>
+
+              {/* Description */}
+              <p className={`text-sm leading-relaxed mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                {game.desc}
+              </p>
+
+              {/* Key Feature bullet points */}
+              <div className="space-y-2 mb-8">
+                {game.features.map((feat: string, idx: number) => (
+                  <div key={idx} className="flex items-center space-x-2 text-xs font-medium text-gray-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500/80 shrink-0" />
+                    <span>{feat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Card Actions Bottom Area */}
+            <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center gap-3">
+              {/* Main Jump Button */}
+              <a
+                href={game.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`w-full sm:flex-1 inline-flex items-center justify-center space-x-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r ${game.buttonGradient} text-white font-black text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer`}
+              >
+                <Play size={16} fill="currentColor" />
+                <span>{translations.games.playBtn}</span>
+                <ArrowUpRight size={16} />
+              </a>
+
+              {/* Copy Link Button */}
+              <button
+                onClick={() => triggerCopy(game.url, `game-${game.id}`)}
+                className={`w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-4 py-3.5 rounded-2xl border text-xs font-bold transition-all cursor-pointer ${
+                  isDark 
+                    ? 'border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white' 
+                    : 'border-black/10 bg-black/5 hover:bg-black/10 text-gray-700 hover:text-black'
+                }`}
+                title={translations.games.copyLinkBtn}
+              >
+                {copiedText === `game-${game.id}` ? (
+                  <>
+                    <Check size={16} className="text-green-500" />
+                    <span className="text-green-500 font-bold">{translations.games.copyLinkBtn} ✓</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={16} />
+                    <span>{translations.games.copyLinkBtn}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
     </motion.div>
   );
 };

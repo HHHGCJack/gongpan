@@ -22,6 +22,7 @@ import {
 } from './src/utils/preload';
 import { WelcomeModal } from './components/WelcomeModal';
 import { SupportModal } from './components/SupportModal';
+import { SearchModal } from './components/SearchModal';
 import { SUPPORT_QR_BASE64 } from './src/assets/support_qr_base64';
 
 // Create Context
@@ -36,6 +37,8 @@ export const ThemeContext = createContext<ThemeContextType>({
   setPansouEnabled: () => {},
   openWelcomeModal: () => {},
   openSupportModal: () => {},
+  openSearchModal: () => {},
+  closeSearchModal: () => {},
   openProductNotice: () => {},
   welcomeModalEnabled: true,
   setWelcomeModalEnabled: () => {},
@@ -165,6 +168,7 @@ function App() {
   const [welcomeInitialTab, setWelcomeInitialTab] = useState<'intro' | 'support'>('intro');
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const location = useLocation();
 
   // Priority pre-warming and GPU decoding of payment QR code in memory
@@ -458,6 +462,14 @@ function App() {
     setSupportModalOpen(true);
   };
 
+  const openSearchModal = () => {
+    setSearchModalOpen(true);
+  };
+
+  const closeSearchModal = () => {
+    setSearchModalOpen(false);
+  };
+
   const openProductNotice = (productName: string, customMessage?: string, productId?: string) => {
     if (customMessage) {
       showToast(customMessage);
@@ -517,8 +529,10 @@ function App() {
       handleCardToast, 
       pansouEnabled, 
       setPansouEnabled,
-      openWelcomeModal,
-      openSupportModal,
+      openWelcomeModal, 
+      openSupportModal, 
+      openSearchModal,
+      closeSearchModal,
       openProductNotice,
       welcomeModalEnabled: siteSettings.welcomeModalEnabled,
       setWelcomeModalEnabled,
@@ -575,6 +589,10 @@ function App() {
           <SupportModal 
             isOpen={supportModalOpen} 
             onClose={() => setSupportModalOpen(false)} 
+          />
+          <SearchModal
+            isOpen={searchModalOpen}
+            onClose={() => setSearchModalOpen(false)}
           />
           
           <div className="flex-grow flex flex-col">
