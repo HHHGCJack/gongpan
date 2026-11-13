@@ -1,0 +1,4 @@
+Contact: mailto:security@gongpan.org
+Preferred-Languages: zh, en
+Canonical: https://gongpan.org/.well-known/security.txt
+Policy: Please report security vulnerabilities responsibly.
