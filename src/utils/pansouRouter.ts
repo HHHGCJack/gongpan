@@ -5,7 +5,6 @@ export interface PansouNode {
   url: string;
   labels: Record<Language, { name: string; tag: string; desc: string }>;
   isPrimary?: boolean;
-  isLastFallback?: boolean;
 }
 
 export const PANSOU_NODES: PansouNode[] = [
@@ -38,126 +37,58 @@ export const PANSOU_NODES: PansouNode[] = [
       el: { name: 'Εφεδρική Γραμμή 1', tag: 'Υψηλή Διαθ.', desc: 'Κατοπτρικός κόμβος' },
     },
   },
-  {
-    id: 'backup2',
-    url: 'http://gongcheng.yyboxdns.com:12309',
-    labels: {
-      zh: { name: '备用线路 2 · 经典节点', tag: '终极兜底', desc: '经典自建直连通道' },
-      en: { name: 'Backup 2 · Legacy Server', tag: 'Final Fallback', desc: 'Dedicated direct tunnel' },
-      ja: { name: '予備回線 2 · クラシック', tag: '最終フォールバック', desc: '専用ダイレクトトンネル' },
-      ko: { name: '보조 회선 2 · 레거시', tag: '최종 백업', desc: '전용 직통 터널' },
-      es: { name: 'Línea de Respaldo 2', tag: 'Último Respaldo', desc: 'Túnel directo clásico' },
-      fr: { name: 'Ligne de Secours 2', tag: 'Secours Ultime', desc: 'Tunnel direct classique' },
-      de: { name: 'Backup-Leitung 2', tag: 'Letzter Rückfall', desc: 'Klassischer Direkt-Tunnel' },
-      el: { name: 'Εφεδρική Γραμμή 2', tag: 'Τελικό Αντίγραφο', desc: 'Κλασικό κανάλι' },
-    },
-    isLastFallback: true,
-  },
+
 ];
 
-// Memory cache for node health probe results
-const probeCache: Record<string, { healthy: boolean; latency: number; timestamp: number }> = {};
-const CACHE_TTL_MS = 60 * 1000; // 1 minute cache
+// Reachability probes cannot inspect cross-origin page content without CORS.
+// Only a completed network request counts; image errors are never treated as success.
+interface ProbeResult { healthy: boolean; latency: number }
+const probeCache = new Map<string, ProbeResult & { expires: number }>();
+const pendingProbes = new Map<string, Promise<ProbeResult>>();
 
-/**
- * Probe a URL to determine if it is reachable without triggering fatal CORS blocks.
- * In browser environment, a no-cors fetch to an existing web server returns an opaque response (resolves).
- * If the domain/server is down or connection refused/timeout, fetch throws an error (rejects).
- */
-export async function probeNodeHealth(url: string, timeoutMs: number = 2200): Promise<{ healthy: boolean; latency: number }> {
-  const cached = probeCache[url];
-  const now = Date.now();
-  if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
-    return { healthy: cached.healthy, latency: cached.latency };
-  }
+export async function probeNodeHealth(url: string, timeoutMs = 2400): Promise<ProbeResult> {
+  const cached = probeCache.get(url);
+  if (cached && cached.expires > Date.now()) return cached;
+  const pending = pendingProbes.get(url);
+  if (pending) return pending;
 
-  const startTime = performance.now();
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    // Attempt no-cors fetch
-    await fetch(url, {
-      method: 'GET',
-      mode: 'no-cors',
-      cache: 'no-store',
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    const latency = Math.round(performance.now() - startTime);
-    probeCache[url] = { healthy: true, latency, timestamp: now };
-    return { healthy: true, latency };
-  } catch {
-    clearTimeout(timeoutId);
-    
-    // As a secondary check for http/https mixed-content or restrictive environments,
-    // if url is https://so.252035.xyz or https://pansou.app/, we can also test image ping with favicon/asset
+  const probe = (async () => {
+    const started = performance.now();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let result: ProbeResult;
     try {
-      const imgPing = await new Promise<boolean>((resolve) => {
-        const img = new Image();
-        const imgTimeout = setTimeout(() => {
-          img.src = '';
-          resolve(false);
-        }, 1500);
-        
-        img.onload = () => {
-          clearTimeout(imgTimeout);
-          resolve(true);
-        };
-        img.onerror = () => {
-          // Even if image 404s, reaching the server means the host is up and responding!
-          clearTimeout(imgTimeout);
-          resolve(true);
-        };
-        img.src = `${url.replace(/\/$/, '')}/favicon.ico?_t=${Date.now()}`;
+      const response = await fetch(url, {
+        method: 'GET', mode: 'no-cors', cache: 'no-store',
+        credentials: 'omit', referrerPolicy: 'no-referrer', signal: controller.signal,
       });
-
-      if (imgPing) {
-        const latency = Math.round(performance.now() - startTime);
-        probeCache[url] = { healthy: true, latency, timestamp: now };
-        return { healthy: true, latency };
-      }
+      result = { healthy: response.type === 'opaque' || response.ok, latency: Math.round(performance.now() - started) };
     } catch {
-      // Ignore
+      result = { healthy: false, latency: Infinity };
+    } finally {
+      clearTimeout(timer);
     }
-
-    const latency = Math.round(performance.now() - startTime);
-    probeCache[url] = { healthy: false, latency: 9999, timestamp: now };
-    return { healthy: false, latency: 9999 };
-  }
+    probeCache.set(url, { ...result, expires: Date.now() + (result.healthy ? 30000 : 5000) });
+    return result;
+  })();
+  pendingProbes.set(url, probe);
+  try { return await probe; }
+  finally { pendingProbes.delete(url); }
 }
 
-/**
- * Intelligent Node Resolver:
- * 1. Checks Node 1 (Primary: https://so.252035.xyz)
- * 2. If down, checks Node 2 (Backup 1: https://pansou.app/)
- * 3. If down, falls back to Node 3 (Backup 2: http://gongcheng.yyboxdns.com:12309)
- */
+// Probe both HTTPS routes concurrently, then choose the fastest reachable route.
 export async function resolveBestPansouNode(): Promise<{ node: PansouNode; isFallback: boolean; latency: number }> {
-  // 1. Try Primary Node (https://so.252035.xyz)
-  const primaryNode = PANSOU_NODES[0];
-  const primaryResult = await probeNodeHealth(primaryNode.url, 2000);
-  if (primaryResult.healthy) {
-    return { node: primaryNode, isFallback: false, latency: primaryResult.latency };
-  }
-
-  // 2. Try Backup 1 Node (https://pansou.app/)
-  const backup1Node = PANSOU_NODES[1];
-  const backup1Result = await probeNodeHealth(backup1Node.url, 2000);
-  if (backup1Result.healthy) {
-    return { node: backup1Node, isFallback: true, latency: backup1Result.latency };
-  }
-
-  // 3. Guaranteed Last Fallback Node (http://gongcheng.yyboxdns.com:12309)
-  const backup2Node = PANSOU_NODES[2];
-  return { node: backup2Node, isFallback: true, latency: 0 };
+  const results = await Promise.all(PANSOU_NODES.map(async (node) => ({ node, ...await probeNodeHealth(node.url) })));
+  const best = results.filter(result => result.healthy).sort((a, b) => a.latency - b.latency)[0];
+  if (!best) throw new Error('No reachable Pansou routes');
+  return { node: best.node, isFallback: !best.node.isPrimary, latency: best.latency };
 }
 
-/**
- * Direct launch with fallback notification
- */
-export function openPansouUrl(url: string) {
-  if (typeof window !== 'undefined') {
-    window.location.href = url;
-  }
+let pendingLaunch: Promise<void> | null = null;
+export function openBestPansouNode(): Promise<void> {
+  if (pendingLaunch) return pendingLaunch;
+  pendingLaunch = resolveBestPansouNode()
+    .then(({ node }) => { window.location.assign(node.url); })
+    .finally(() => { pendingLaunch = null; });
+  return pendingLaunch;
 }

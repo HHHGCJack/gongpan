@@ -55,7 +55,7 @@
       html, body {
         scrollbar-width: none; /* Firefox */
         -ms-overflow-style: none; /* IE and Edge */
-        overflow-x: hidden; /* Prevent horizontal scroll */
+        overflow-x: clip; /* Prevent horizontal scroll without trapping sticky sections */
         -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
         -webkit-touch-callout: none !important; /* Disable iOS Safari link peek/preview on long press */
       }

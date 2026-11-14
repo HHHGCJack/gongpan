@@ -1,3 +1,4 @@
+import { PRODUCT_VISUALS } from '../data/productArt';
 import { ComponentType, lazy, LazyExoticComponent } from 'react';
 
 // Enhanced Lazy loader with instant prefetch/preload capability
@@ -98,6 +99,7 @@ export function preloadImage(url: string | undefined): void {
 
 // Key showcase hero images and critical payment assets to warm up browser disk/memory cache
 export const SHOWCASE_HERO_IMAGES = [
+  ...Object.values(PRODUCT_VISUALS).map(visual => visual.detail),
   '/support-qr.webp',
   '/support-qr.jpg',
   'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=60',

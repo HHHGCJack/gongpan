@@ -1,3 +1,4 @@
+import { openBestPansouNode } from '../src/utils/pansouRouter';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -22,6 +23,7 @@ import { showcaseData } from '../src/data/showcases';
 import { useCardTransition } from '../src/context/CardTransitionContext';
 import { scrollToElementSmoothly } from '../src/utils/smoothScroll';
 import { preloadRoute, preloadSupportModal } from '../src/utils/preload';
+import { isMobileDevice } from '../src/utils/device';
 
 export const Navbar: React.FC = () => {
   const { 
@@ -265,6 +267,8 @@ export const Navbar: React.FC = () => {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [usesMobileNavigation] = useState(() => isMobileDevice());
+  const desktopBlock = usesMobileNavigation ? 'hidden' : 'block';
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const [mobileExpandedCategories, setMobileExpandedCategories] = useState<Record<number, boolean>>({});
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -433,7 +437,7 @@ export const Navbar: React.FC = () => {
     }
   };
 
-  const handleShowcaseVisit = () => {
+  const handleShowcaseVisit = async () => {
     if (!currentShowcase) return;
     if ((currentShowcase as any).productId && isProductEnabled && !isProductEnabled((currentShowcase as any).productId)) {
       if (openProductNotice) {
@@ -449,6 +453,12 @@ export const Navbar: React.FC = () => {
       } else {
         showToast(language === 'zh' ? '因政策原因暂停服务' : 'Service suspended due to policy');
       }
+      return;
+    }
+    if (currentShowcase.requiresPansouCheck) {
+      showToast(language === 'zh' ? '正在检测可用线路…' : 'Checking available routes…');
+      try { await openBestPansouNode(); }
+      catch { showToast(language === 'zh' ? '暂时无法连接两条线路，请稍后重试' : 'Both routes are unreachable. Please try again shortly.'); }
       return;
     }
     if (currentShowcase.isExternal) {
@@ -478,7 +488,7 @@ export const Navbar: React.FC = () => {
     <>
       {/* Dropdown Background Dimmer (Desktop only) */}
       <div 
-        className={`hidden lg:block fixed inset-0 z-30 pointer-events-none transition-opacity duration-300 ease-out ${
+        className={`${desktopBlock} fixed inset-0 z-30 pointer-events-none transition-opacity duration-300 ease-out ${
           activeDropdown !== null ? 'opacity-100' : 'opacity-0'
         } ${
           themeMode === 'dark' ? 'bg-black/50 backdrop-blur-sm' : 'bg-black/20 backdrop-blur-sm'
@@ -509,7 +519,7 @@ export const Navbar: React.FC = () => {
 
         {/* Dropdown Glass */}
         <div 
-          className={`hidden lg:block absolute top-0 left-0 w-full h-[380px] pointer-events-none -z-10 transition-opacity duration-300 liquid-glass-heavy ${
+          className={`${desktopBlock} absolute top-0 left-0 w-full h-[380px] pointer-events-none -z-10 transition-opacity duration-300 liquid-glass-heavy ${
              activeDropdown !== null ? 'opacity-100' : 'opacity-0'
           } ${
              themeMode === 'dark' 
@@ -565,7 +575,7 @@ export const Navbar: React.FC = () => {
 
           {/* CENTER: Main Navigation on Home / Clean in Showcase */}
           {isShowcasePage && currentShowcase ? null : (
-            <div className="hidden lg:flex items-center space-x-2 h-full">
+            <div className={`${usesMobileNavigation ? 'hidden' : 'flex'} items-center space-x-2 h-full`}>
               {navData.map((item, idx) => (
                 <div 
                   key={item.name} 
@@ -687,7 +697,9 @@ export const Navbar: React.FC = () => {
 
             {/* Mobile Menu Button */}
             <button 
-              className={`lg:hidden p-2 rounded-full active:bg-black/5 ${themeMode === 'dark' ? 'text-white' : 'text-gray-800'}`}
+              className={`${usesMobileNavigation ? '' : 'hidden'} p-2 rounded-full active:bg-black/5 ${themeMode === 'dark' ? 'text-white' : 'text-gray-800'}`}
+              aria-label={mobileMenuOpen ? '关闭菜单 / Close menu' : '打开菜单 / Open menu'}
+              aria-expanded={mobileMenuOpen}
               onClick={() => {
                 const nextState = !mobileMenuOpen;
                 setMobileMenuOpen(nextState);
@@ -708,7 +720,7 @@ export const Navbar: React.FC = () => {
 
         {/* Desktop Navigation Dropdown Content */}
         <div 
-          className={`hidden lg:block absolute top-full left-0 w-full transition-[opacity,transform] duration-200 z-10 ${
+          className={`${desktopBlock} absolute top-full left-0 w-full transition-[opacity,transform] duration-200 z-10 ${
             activeDropdown !== null && !isShowcasePage ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none'
           }`}
           onMouseEnter={() => {
@@ -769,14 +781,14 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Menu - Full Screen Liquid Glass Drawer */}
       <AnimatePresence>
-        {mobileMenuOpen && (
+        {usesMobileNavigation && mobileMenuOpen && (
           <motion.div 
             key="mobile-menu-wrapper"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className="lg:hidden fixed inset-0 z-40 overflow-hidden"
+            className="fixed inset-0 z-40 overflow-hidden"
           >
             {/* Backdrop Dimmer Overlay */}
             <div 
